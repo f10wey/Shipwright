@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UIWidgetOptions.hpp"
+#include "Localization.h"
 
 #include <libultraship/bridge/consolevariablebridge.h>
 #include <ship/window/gui/GuiWindow.h>
@@ -128,9 +129,10 @@ bool Combobox(std::string label, T* value, const std::map<T, const char*>& combo
     const char* longest = "";
     size_t length = 0;
     for (auto& [index, string] : comboMap) {
-        size_t len = strlen(string);
+        const char* shownStr = SohLoc::Text(string);
+        size_t len = strlen(shownStr);
         if (len > length) {
-            longest = string;
+            longest = shownStr;
             length = len;
         }
     }
@@ -156,11 +158,13 @@ bool Combobox(std::string label, T* value, const std::map<T, const char*>& combo
     }
 
     ImGui::SetNextItemWidth(comboWidth);
-    if (ImGui::BeginCombo(invisibleLabel, comboMap.at(*value), options.flags)) {
+    if (ImGui::BeginCombo(invisibleLabel, SohLoc::Text(comboMap.at(*value)), options.flags)) {
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0f, 10.0f));
         for (const auto& pair : comboMap) {
             if (strlen(pair.second) > 1) {
-                if (ImGui::Selectable(pair.second, pair.first == *value)) {
+                // Translated text, original string kept after "##" as the ID
+                std::string itemLabel = std::string(SohLoc::Text(pair.second)) + "##" + pair.second;
+                if (ImGui::Selectable(itemLabel.c_str(), pair.first == *value)) {
                     *value = pair.first;
                     dirty = true;
                 }
@@ -176,7 +180,7 @@ bool Combobox(std::string label, T* value, const std::map<T, const char*>& combo
                 ImGui::SameLine();
                 ImGui::Text("%s", trueLabel.c_str());
             } else if (options.labelPosition == LabelPositions::Far) {
-                float width = ImGui::CalcTextSize(comboMap.at(*value)).x + ImGui::GetStyle().FramePadding.x * 2;
+                float width = ImGui::CalcTextSize(SohLoc::Text(comboMap.at(*value))).x + ImGui::GetStyle().FramePadding.x * 2;
                 ImGui::SameLine(ImGui::GetContentRegionAvail().x - width);
                 ImGui::Text("%s", trueLabel.c_str());
             }

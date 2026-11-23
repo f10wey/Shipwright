@@ -1938,7 +1938,9 @@ ImFont* OTRGlobals::CreateFontWithSize(float size, std::string fontPath, bool is
             Ship::Context::GetRawInstance()->GetResourceManager()->LoadResource(fontPath, false, initData));
         ImFontConfig fontConf;
         fontConf.FontDataOwnedByAtlas = false;
-        const ImWchar* glyph_ranges = isJapaneseFont ? mImGuiIo->Fonts->GetGlyphRangesJapanese() : nullptr;
+        // Load Cyrillic glyphs as well so the Russian menu translation renders (Montserrat includes them)
+        const ImWchar* glyph_ranges =
+            isJapaneseFont ? mImGuiIo->Fonts->GetGlyphRangesJapanese() : mImGuiIo->Fonts->GetGlyphRangesCyrillic();
         font = mImGuiIo->Fonts->AddFontFromMemoryTTF(fontData->Data, static_cast<int>(fontData->DataSize), size,
                                                      &fontConf, glyph_ranges);
     }

@@ -1,4 +1,5 @@
 #include "UIWidgets.hpp"
+#include "Localization.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
@@ -21,7 +22,8 @@ void CVarChanged(const char* cvarName) {
 // Manually included newlines will still be respected and reset the line length
 // If line is midword when it hits the limit, text should break at the last encountered space
 std::string WrappedText(const char* text, unsigned int charactersPerLine) {
-    std::string newText(text);
+    // Tooltips go through here, so this is where they get translated
+    std::string newText(SohLoc::Text(text));
     const size_t tipLength = newText.length();
     int lastSpace = -1;
     unsigned int currentLineLength = 0;
@@ -39,7 +41,10 @@ std::string WrappedText(const char* text, unsigned int charactersPerLine) {
             currentLineLength = currentCharacter - lastSpace - 1;
             lastSpace = -1;
         }
-        currentLineLength++;
+        // Count characters, not bytes, so UTF-8 (Cyrillic) text wraps at the same width as English
+        if ((static_cast<unsigned char>(newText[currentCharacter]) & 0xC0) != 0x80) {
+            currentLineLength++;
+        }
     }
 
     return newText;
