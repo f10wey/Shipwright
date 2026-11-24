@@ -23,6 +23,15 @@ android {
         versionCode 8
         versionName "9.0.2"
     }
+    // Fixed key so each new build installs over the previous one (CI otherwise makes a new debug key every run)
+    signingConfigs {
+        sohru {
+            storeFile file('soh-ru.keystore')
+            storePassword 'sohruandroid'
+            keyAlias 'sohru'
+            keyPassword 'sohruandroid'
+        }
+    }
     buildTypes {
         debug {
             externalNativeBuild {
@@ -37,7 +46,7 @@ android {
             minifyEnabled false
             debuggable false
             jniDebuggable false
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.sohru
             externalNativeBuild {
                 cmake {
                     arguments "-DSDL_SHARED=ON", "-DANDROID_STL=c++_static", "-DHAVE_LD_VERSION_SCRIPT=OFF",'-DUSE_OPENGLES=ON'
