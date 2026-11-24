@@ -2,11 +2,14 @@
 #include "ResourceManagerHelpers.h"
 #include <libultraship/libultraship.h>
 #include "soh/resource/type/Scene.h"
+#include "soh/cvar_prefixes.h"
 #include <utils/StringHelper.h>
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 #include "global.h"
 #include "vt.h"
 #include <Vertex.h>
+#include <atomic>
+#include <thread>
 
 extern "C" void Play_InitScene(PlayState* play, s32 spawn);
 extern "C" void Play_InitEnvironment(PlayState* play, s16 skyboxId);
@@ -17,6 +20,32 @@ s32 OTRScene_ExecuteCommands(PlayState* play, SOH::Scene* scene);
 Ship::IResource* OTRPlay_LoadFile(PlayState* play, const char* fileName) {
     auto res = Ship::Context::GetInstance()->GetResourceManager()->LoadResource(fileName);
     return res.get();
+}
+
+// Background preload of everything in the scene folder (rooms, display lists, textures; the alternate/HD
+// versions are picked automatically when Alternate Assets is on). Without this, big HD textures are read and
+// decoded the first time they appear on screen, which causes stutter right after entering a large area.
+static std::atomic<uint32_t> sScenePrefetchGeneration{ 0 };
+
+static void PrefetchSceneResources(const std::string& sceneDir) {
+    if (!CVarGetInteger(CVAR_ENHANCEMENT("PreloadSceneAssets"), 1)) {
+        return;
+    }
+    uint32_t generation = ++sScenePrefetchGeneration;
+    std::thread([sceneDir, generation]() {
+        auto resourceManager = Ship::Context::GetInstance()->GetResourceManager();
+        auto files = resourceManager->GetArchiveManager()->ListFiles(sceneDir + "/*");
+        if (files == nullptr) {
+            return;
+        }
+        for (const auto& file : *files) {
+            // Stop if the player already moved to another scene
+            if (sScenePrefetchGeneration.load() != generation) {
+                return;
+            }
+            resourceManager->LoadResource(file);
+        }
+    }).detach();
 }
 
 extern "C" void OTRPlay_SpawnScene(PlayState* play, s32 sceneId, s32 spawn) {
@@ -39,6 +68,8 @@ extern "C" void OTRPlay_SpawnScene(PlayState* play, s32 sceneId, s32 spawn) {
     }
     std::string scenePath = StringHelper::Sprintf("scenes/%s/%s/%s", sceneVersion.c_str(), scene->sceneFile.fileName,
                                                   scene->sceneFile.fileName);
+
+    PrefetchSceneResources(StringHelper::Sprintf("scenes/%s/%s", sceneVersion.c_str(), scene->sceneFile.fileName));
 
     play->sceneSegment = OTRPlay_LoadFile(play, scenePath.c_str());
 

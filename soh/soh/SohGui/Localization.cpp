@@ -408,6 +408,15 @@ static const std::unordered_map<std::string, const char*> sRussian = {
     { "Move %zu mods", "Переместить модов: %zu" },
     { "Custom Music: %zu song(s) loaded from .ootrs files", "Своя музыка: загружено треков из файлов .ootrs: %zu" },
     { "Custom soundbanks are not supported yet:", "Свои звуковые банки пока не поддерживаются:" },
+
+    // ---- Android: background scene preload ----
+    { "Preload Scene Assets", "Подгружать локацию заранее" },
+    { "Loads the textures and models of the whole area in the background as soon as you enter it, so HD texture packs "
+      "stutter less right after a loading screen. Uses more memory.",
+      "Сразу при входе в локацию загружает в фоне все её текстуры и модели, чтобы HD-текстуры меньше тормозили "
+      "после загрузки. Расходует больше памяти." },
+    { "Use Alternate Assets", "Альтернативные ресурсы (моды)" },
+    { "Mods", "Моды" },
 };
 
 const char* Text(const char* english) {
