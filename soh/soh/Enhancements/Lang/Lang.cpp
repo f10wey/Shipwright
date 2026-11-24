@@ -1,4 +1,5 @@
 #include <memory>
+#include "soh/SohGui/Localization.h"
 
 #include <libultraship/bridge/consolevariablebridge.h>
 #include "ship/Context.h"
@@ -148,7 +149,7 @@ void Lang::LoadLangs() {
 }
 
 void LanguageCustomWidget(WidgetInfo& info) {
-    ImGui::Text("Select Language:");
+    ImGui::Text("%s", SohLoc::Text("Select Language:"));
     for (const auto& [id, data] : langs) {
         if (ImGui::Button(StringHelper::Sprintf("%s [%s]", data["language_name"].get_ref<const std::string&>().c_str(),
                                                 id.c_str())

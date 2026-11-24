@@ -187,7 +187,8 @@ void PopStyleHeader() {
 bool Button(const char* label, const ButtonOptions& options) {
     ImGui::BeginDisabled(options.disabled);
     PushStyleButton(options.color, options.padding);
-    bool dirty = ImGui::Button(label, options.size);
+    const std::string trLabel = SohLoc::Label(label);
+    bool dirty = ImGui::Button(trLabel.c_str(), options.size);
     PopStyleButton();
     ImGui::EndDisabled();
     if (options.disabled && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) &&
@@ -297,7 +298,10 @@ void RenderText(ImVec2 pos, const char* text, const char* text_end, bool hide_te
     }
 }
 
-bool Checkbox(const char* _label, bool* value, const CheckboxOptions& options) {
+bool Checkbox(const char* _labelOriginal, bool* value, const CheckboxOptions& options) {
+    // Show translated text; menu widgets already arrive translated, so this mainly covers custom widgets
+    const std::string trCheckboxLabel = SohLoc::Label(_labelOriginal);
+    const char* _label = trCheckboxLabel.c_str();
     ImGuiWindow* window = ImGui::GetCurrentWindow();
     if (window->SkipItems)
         return false;
@@ -579,7 +583,7 @@ bool SliderInt(const char* label, int32_t* value, const IntSliderOptions& option
     } else {
         ImGui::SetNextItemWidth(width);
     }
-    if (ImGui::SliderScalar(invisibleLabel, ImGuiDataType_S32, value, &options.min, &options.max, options.format,
+    if (ImGui::SliderScalar(invisibleLabel, ImGuiDataType_S32, value, &options.min, &options.max, SohLoc::Text(options.format),
                             options.flags)) {
         if (options.clamp) {
             if (*value < options.min) {
@@ -718,7 +722,7 @@ bool SliderFloat(const char* label, float* value, const FloatSliderOptions& opti
         ImGui::SetNextItemWidth(width);
     }
     if (ImGui::SliderScalar(invisibleLabel, ImGuiDataType_Float, &valueToDisplay, &minToDisplay, &maxToDisplay,
-                            options.format, options.flags)) {
+                            SohLoc::Text(options.format), options.flags)) {
         *value = options.isPercentage ? valueToDisplay / 100.0f : valueToDisplay;
         if (options.clamp) {
             ClampFloat(value, options.min, options.max, options.step);

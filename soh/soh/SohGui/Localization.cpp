@@ -330,7 +330,7 @@ static const std::unordered_map<std::string, const char*> sRussian = {
     { "Link's Cow in Both Time Periods", "Корова Линка в обоих временах" },
     { "Allows the Lon Lon Ranch Obstacle Course reward to be shared across time periods.",
       "Награда за полосу препятствий на ранчо Лон Лон есть и в прошлом, и в будущем." },
-    { "Play Zelda's Lullaby to Open Sleepless Waterfall", "Колыбельная Зельды открывает водопад" },
+    { "Play Zelda's Lullaby to Open Sleeping Waterfall", "Колыбельная Зельды открывает водопад" },
     { "Always: Link must always play Zelda's Lullaby to open the waterfall entrance to Zora's Domain.\nOnce: Link only "
       "needs to play Zelda's Lullaby once to open the waterfall; after that, it stays open permanently.\nNever: Link "
       "never needs to play Zelda's Lullaby to open the waterfall. He only needs to have learned it and have an Ocarina.",
@@ -339,6 +339,75 @@ static const std::unordered_map<std::string, const char*> sRussian = {
       "песню и иметь окарину." },
     { "Skip Feeding Jabu-Jabu", "Не кормить Джабу-Джабу" },
     { "Allow Link to enter Jabu-Jabu without feeding him a fish.", "Можно войти в Джабу-Джабу, не кормя его рыбой." },
+
+    // ---- Settings -> Audio (slider labels keep their %d %% format) ----
+    { "Master Volume: %d %%", "Общая громкость: %d %%" },
+    { "Main Music Volume: %d %%", "Музыка: %d %%" },
+    { "Sub Music Volume: %d %%", "Доп. музыка: %d %%" },
+    { "Fanfare Volume: %d %%", "Фанфары: %d %%" },
+    { "Sound Effects Volume: %d %%", "Звуковые эффекты: %d %%" },
+    { "Original (%d)", "Оригинал (%d)" },
+
+    // ---- Settings -> Language ----
+    { "English", "Английский" },
+    { "German", "Немецкий" },
+    { "French", "Французский" },
+    { "Japanese", "Японский" },
+    { "Select Language:", "Выберите язык:" },
+
+    // ---- Settings -> Presets ----
+    { "Presets", "Пресеты" },
+    { "No presets with rando options. Make some in Settings -> Presets",
+      "Нет пресетов с настройками рандомайзера. Создай их в Настройки -> Пресеты" },
+    { "Name", "Название" },
+    { "Apply", "Применить" },
+    { "Apply Preset", "Применить пресет" },
+    { "Edit", "Изменить" },
+    { "Delete", "Удалить" },
+    { "No presets found.", "Пресетов нет." },
+    { "New Preset", "Новый пресет" },
+    { "Hide built-in presets", "Скрыть встроенные пресеты" },
+    { "Preset Name", "Название пресета" },
+    { "Preset name already exists", "Пресет с таким названием уже есть" },
+    { "Preset name is empty", "Название пресета пустое" },
+    { "No sections selected", "Не выбран ни один раздел" },
+    { "Save", "Сохранить" },
+    { "Disabled because of race lockout", "Отключено из-за режима гонки" },
+    { "Cosmetics", "Внешний вид" },
+    { "Rando Settings", "Настройки рандомайзера" },
+    { "Trackers", "Трекеры" },
+    { "Check Tracker", "Трекер проверок" },
+    { "Entrance Tracker", "Трекер входов" },
+
+    // ---- Settings -> Mod Menu ----
+    { "Enable Mods", "Включить моды" },
+    { "Toggle mods. For graphics mods, this means toggling between default and mod graphics.",
+      "Включает и выключает моды. Для графических модов — переключение между обычной графикой и графикой мода." },
+    { "Mods Tab Hotkey", "Переключать моды клавишей Tab" },
+    { "Allows pressing the Tab key to toggle mods", "Клавиша Tab включает и выключает моды." },
+    { "Mods are currently not reloaded at runtime. Close and re-open Ship for the changes to take effect.\nDrag "
+      "ordering for the enabled list is available.\nMod priority is top to bottom. They override mods listed below "
+      "them.",
+      "Моды не перезагружаются на ходу: закрой и снова открой игру, чтобы изменения применились.\nПорядок включённых "
+      "модов можно менять перетаскиванием.\nПриоритет сверху вниз: верхние моды перекрывают те, что ниже." },
+    { "Update", "Обновить" },
+    { "Currently editing...", "Идёт редактирование..." },
+    { "Already editing...", "Уже редактируется..." },
+    { "Clear List", "Очистить список" },
+    { "Clear the current mod list and force a rebuild on next boot.\nClick Apply & Close to save this change.",
+      "Очищает список модов, при следующем запуске он соберётся заново.\nНажми «Применить и закрыть», чтобы "
+      "сохранить." },
+    { "Apply & Close", "Применить и закрыть" },
+    { "Application currently requires a restart. Save the mod info and close SoH?",
+      "Нужен перезапуск игры. Сохранить список модов и закрыть игру?" },
+    { "Close", "Закрыть" },
+    { "Temporarily disabled while editing mods list.", "Недоступно, пока редактируется список модов." },
+    { "Enabled Mods", "Включённые моды" },
+    { "Disabled Mods", "Выключенные моды" },
+    { "Move %s", "Переместить %s" },
+    { "Move %zu mods", "Переместить модов: %zu" },
+    { "Custom Music: %zu song(s) loaded from .ootrs files", "Своя музыка: загружено треков из файлов .ootrs: %zu" },
+    { "Custom soundbanks are not supported yet:", "Свои звуковые банки пока не поддерживаются:" },
 };
 
 const char* Text(const char* english) {
@@ -355,11 +424,14 @@ const char* Text(const std::string& english) {
 }
 
 std::string Label(const std::string& english) {
-    auto it = sRussian.find(english);
+    // Translate only the visible part (before "##"); keep the whole original label after "##" so the ImGui ID
+    // stays unique and stable.
+    size_t hashPos = english.find("##");
+    std::string visible = hashPos == std::string::npos ? english : english.substr(0, hashPos);
+    auto it = sRussian.find(visible);
     if (it == sRussian.end()) {
         return english;
     }
-    // Keep the original text after "##" so ImGui IDs (and saved window/collapse state) do not change.
     return std::string(it->second) + "##" + english;
 }
 

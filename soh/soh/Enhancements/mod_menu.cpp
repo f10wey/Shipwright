@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "soh/SohGui/Localization.h"
 #include <cctype>
 #include <map>
 #include <set>
@@ -420,9 +421,9 @@ void DrawMods(bool enabled) {
                     SelectOnlyMod(file, sourceIndex);
                 ImGui::SetDragDropPayload("DragMove", &sourceIndex, sizeof(int));
                 if (selectedEnabledModFiles.size() == 1) {
-                    ImGui::Text("Move %s", file.c_str());
+                    ImGui::Text(SohLoc::Text("Move %s"), file.c_str());
                 } else {
-                    ImGui::Text("Move %zu mods", selectedEnabledModFiles.size());
+                    ImGui::Text(SohLoc::Text("Move %zu mods"), selectedEnabledModFiles.size());
                 }
                 ImGui::EndDragDropSource();
             }
@@ -451,16 +452,16 @@ void DrawCustomMusicSummary() {
     }
 
     if (skipped.empty()) {
-        ImGui::Text("Custom Music: %zu song(s) loaded from .ootrs files", songCount);
+        ImGui::Text(SohLoc::Text("Custom Music: %zu song(s) loaded from .ootrs files"), songCount);
         return;
     }
 
-    ImGui::Text("Custom Music: %zu song(s) loaded from .ootrs files", songCount);
+    ImGui::Text(SohLoc::Text("Custom Music: %zu song(s) loaded from .ootrs files"), songCount);
     ImGui::SameLine();
     ImGui::TextColored(UIWidgets::ColorValues.at(UIWidgets::Colors::Yellow), "(%zu skipped)", skipped.size());
     if (ImGui::IsItemHovered()) {
         ImGui::BeginTooltip();
-        ImGui::Text("Custom soundbanks are not supported yet:");
+        ImGui::Text("%s", SohLoc::Text("Custom soundbanks are not supported yet:"));
         for (const std::string& file : skipped) {
             ImGui::BulletText("%s", file.c_str());
         }
@@ -532,8 +533,8 @@ void ModMenuWindow::DrawElement() {
     }
     ImGui::BeginDisabled(!editing);
     if (ImGui::BeginTable("tableMods", 2, ImGuiTableFlags_BordersH | ImGuiTableFlags_BordersV)) {
-        ImGui::TableSetupColumn("Enabled Mods", ImGuiTableColumnFlags_WidthStretch, 200.0f);
-        // ImGui::TableSetupColumn("Disabled Mods", ImGuiTableColumnFlags_WidthStretch, 200.0f);
+        ImGui::TableSetupColumn(SohLoc::Text("Enabled Mods"), ImGuiTableColumnFlags_WidthStretch, 200.0f);
+        // ImGui::TableSetupColumn(SohLoc::Text("Disabled Mods"), ImGuiTableColumnFlags_WidthStretch, 200.0f);
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         ImGui::TableHeadersRow();
         ImGui::PopItemFlag();

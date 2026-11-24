@@ -1,4 +1,5 @@
 #include "Presets.h"
+#include "soh/SohGui/Localization.h"
 #include <algorithm>
 #include <string>
 #include <fstream>
@@ -271,10 +272,10 @@ void DrawPresetSelector(std::vector<PresetSection> includeSections, std::string 
             }
         }
     }
-    ImGui::Text("Presets");
+    ImGui::Text("%s", SohLoc::Text("Presets"));
     if (includedPresets.empty()) {
         ImGui::PushStyleColor(ImGuiCol_Text, UIWidgets::ColorValues.at(UIWidgets::Colors::Orange));
-        ImGui::Text("No presets with rando options. Make some in Settings -> Presets");
+        ImGui::Text("%s", SohLoc::Text("No presets with rando options. Make some in Settings -> Presets"));
         ImGui::PopStyleColor();
         return;
     }
@@ -538,15 +539,15 @@ void PresetsCustomWidget(WidgetInfo& info) {
     bool hideBuiltIn = CVarGetInteger(CVAR_GENERAL("HideBuiltInPresets"), 0);
     UIWidgets::PushStyleTabs(THEME_COLOR);
     if (ImGui::BeginTable("PresetWidgetTable", PRESET_SECTION_MAX + 4)) {
-        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, 400);
+        ImGui::TableSetupColumn(SohLoc::Text("Name"), ImGuiTableColumnFlags_WidthFixed, 400);
         for (int i = PRESET_SECTION_SETTINGS; i < PRESET_SECTION_MAX; i++) {
             ImGui::TableSetupColumn(blockInfo[i].names[0].c_str());
         }
-        ImGui::TableSetupColumn("Apply", ImGuiTableColumnFlags_WidthFixed,
+        ImGui::TableSetupColumn(SohLoc::Text("Apply"), ImGuiTableColumnFlags_WidthFixed,
                                 ImGui::CalcTextSize("Apply").x + ImGui::GetStyle().FramePadding.x * 2);
-        ImGui::TableSetupColumn("Edit", ImGuiTableColumnFlags_WidthFixed,
+        ImGui::TableSetupColumn(SohLoc::Text("Edit"), ImGuiTableColumnFlags_WidthFixed,
                                 ImGui::CalcTextSize("Edit").x + ImGui::GetStyle().FramePadding.x * 2);
-        ImGui::TableSetupColumn("Delete", ImGuiTableColumnFlags_WidthFixed,
+        ImGui::TableSetupColumn(SohLoc::Text("Delete"), ImGuiTableColumnFlags_WidthFixed,
                                 ImGui::CalcTextSize("Delete").x + ImGui::GetStyle().FramePadding.x * 2);
         BlankButton();
         ImGui::TableNextRow();
@@ -562,7 +563,7 @@ void PresetsCustomWidget(WidgetInfo& info) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             ImGui::AlignTextToFramePadding();
-            ImGui::Text("No presets found.");
+            ImGui::Text("%s", SohLoc::Text("No presets found."));
             ImGui::EndTable();
             UIWidgets::PopStyleTabs();
             ImGui::PopFont();
