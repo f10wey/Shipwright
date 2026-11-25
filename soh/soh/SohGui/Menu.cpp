@@ -9,6 +9,8 @@
 #include <variant>
 #include <imgui_internal.h>
 #include <cmath>
+
+static void TouchDragScroll();
 #include <spdlog/fmt/fmt.h>
 #include "variables.h"
 #include <tuple>
