@@ -446,7 +446,7 @@ void SohMenu::AddMenuEnhancements() {
     AddWidget(path, "Preload Scene Assets", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("PreloadSceneAssets"))
         .RaceDisable(false)
-        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
             "Loads the textures and models of the whole area in the background as soon as you enter it, so "
             "HD texture packs stutter less right after a loading screen. Uses more memory."));
     AddWidget(path, "Disable Bomb Billboarding", WIDGET_CVAR_CHECKBOX)

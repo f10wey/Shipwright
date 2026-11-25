@@ -162,6 +162,14 @@ add_compile_definitions(CONTROLLERBUTTONS_T=uint32_t)
 ################################################################################
 # Sub-projects
 ################################################################################
+# Phones with HD texture packs see more than 500 textures in big areas like Hyrule Field;
+# a larger texture cache stops them from being evicted and re-uploaded on every camera turn.
+if(ANDROID)
+    set(_lus_gfx_pc ${CMAKE_CURRENT_SOURCE_DIR}/libultraship/src/graphic/Fast3D/gfx_pc.cpp)
+    file(READ ${_lus_gfx_pc} _lus_gfx_pc_src)
+    string(REPLACE "#define TEXTURE_CACHE_MAX_SIZE 500" "#define TEXTURE_CACHE_MAX_SIZE 2000" _lus_gfx_pc_src "${_lus_gfx_pc_src}")
+    file(WRITE ${_lus_gfx_pc} "${_lus_gfx_pc_src}")
+endif()
 add_subdirectory(libultraship ${CMAKE_BINARY_DIR}/libultraship)
 target_compile_options(libultraship PRIVATE "${WARNING_OVERRIDE}")
 add_subdirectory(ZAPDTR/ZAPD ${CMAKE_BINARY_DIR}/ZAPD)

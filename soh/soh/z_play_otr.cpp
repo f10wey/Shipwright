@@ -28,7 +28,7 @@ Ship::IResource* OTRPlay_LoadFile(PlayState* play, const char* fileName) {
 static std::atomic<uint32_t> sScenePrefetchGeneration{ 0 };
 
 static void PrefetchSceneResources(const std::string& sceneDir) {
-    if (!CVarGetInteger(CVAR_ENHANCEMENT("PreloadSceneAssets"), 1)) {
+    if (!CVarGetInteger(CVAR_ENHANCEMENT("PreloadSceneAssets"), 0)) {
         return;
     }
     uint32_t generation = ++sScenePrefetchGeneration;
