@@ -301,6 +301,22 @@ void SohMenu::AddMenuSettings() {
                 .Min(0.5f)
                 .Max(2.0f));
 #ifndef __WIIU__
+    AddWidget(path, "Automatic Resolution", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_SETTING("DynamicResolution"))
+        .RaceDisable(false)
+        .Options(CheckboxOptions().Tooltip(
+            "Lowers the internal resolution in heavy areas when the game can't keep up, and raises it back when "
+            "it runs smoothly again. Never goes above the Internal Resolution set above."));
+    AddWidget(path, "Lowest Automatic Resolution", WIDGET_CVAR_SLIDER_FLOAT)
+        .CVar(CVAR_SETTING("DynamicResolutionMin"))
+        .RaceDisable(false)
+        .Options(FloatSliderOptions()
+                     .Tooltip("How low the automatic resolution is allowed to go.")
+                     .Format("%.0f%%")
+                     .IsPercentage()
+                     .Min(0.4f)
+                     .Max(1.0f)
+                     .DefaultValue(0.5f));
     AddWidget(path, "Anti-aliasing (MSAA)", WIDGET_CVAR_SLIDER_INT)
         .CVar(CVAR_MSAA_VALUE)
         .RaceDisable(false)

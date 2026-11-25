@@ -690,6 +690,12 @@ static const std::unordered_map<std::string, const char*> sRussian = {
     { "Restore a bug from NTSC 1.0 that allows bypassing Bongo Bongo's intro cutscene to quickly kill him.", "Возвращает баг из NTSC 1.0: можно пропустить появление Бонго-Бонго и быстро его убить." },
     { "Restores a bug from NTSC 1.0/1.1 that allows you to obtain the eyeball frog from King Zora instead of the Zora Tunic by Holding Shield.", "Возвращает баг из NTSC 1.0/1.1: если держать щит, король Зора даст лягушку-глаз вместо туники Зора." },
     { "Makes L and R switch pages like on the GameCube. Z opens the Debug Menu instead.", "Страницы паузы листаются кнопками L и R, как на GameCube. Z открывает отладочное меню." },
+
+    // ---- Android: automatic resolution ----
+    { "Automatic Resolution", "Автоматическое разрешение" },
+    { "Lowers the internal resolution in heavy areas when the game can't keep up, and raises it back when it runs smoothly again. Never goes above the Internal Resolution set above.", "В тяжёлых местах, где игра не успевает, снижает внутреннее разрешение, а когда снова идёт плавно, возвращает его. Выше «Внутреннего разрешения», заданного выше, не поднимается." },
+    { "Lowest Automatic Resolution", "Минимум автоматического разрешения" },
+    { "How low the automatic resolution is allowed to go.", "Ниже этого значения разрешение не опустится." },
 };
 
 const char* Text(const char* english) {

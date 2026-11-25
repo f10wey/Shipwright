@@ -1464,6 +1464,69 @@ void RunCommands(Gfx* Commands, const std::vector<std::unordered_map<Mtx*, MtxF>
 }
 
 // C->C++ Bridge
+// Automatic resolution: lowers the internal resolution when frames take too long (heavy rooms on weak phones) and
+// raises it back, never above the resolution chosen in Settings. Separate opt-in option, off by default.
+static void UpdateDynamicResolution(int gameFps) {
+    using Clock = std::chrono::steady_clock;
+    static Clock::time_point lastFrame = Clock::now();
+    static Clock::time_point lastChange = Clock::now();
+    static double avgFrameMs = 0.0;
+    static float current = -1.0f;
+    static int goodSeconds = 0;
+    static bool wasEnabled = false;
+
+    auto window = Ship::Context::GetInstance()->GetWindow();
+    float userMax = CVarGetFloat(CVAR_INTERNAL_RESOLUTION, 1.0f);
+    auto now = Clock::now();
+    double frameMs = std::chrono::duration<double, std::milli>(now - lastFrame).count();
+    lastFrame = now;
+
+    if (!CVarGetInteger(CVAR_SETTING("DynamicResolution"), 0)) {
+        if (wasEnabled) {
+            // Restore the user's resolution once when the option is switched off
+            window->SetResolutionMultiplier(userMax);
+            wasEnabled = false;
+            current = -1.0f;
+        }
+        return;
+    }
+    if (!wasEnabled || current < 0.0f || current > userMax) {
+        current = userMax;
+        avgFrameMs = 0.0;
+        wasEnabled = true;
+    }
+    // Ignore pauses (menus, loading, app in background)
+    if (frameMs > 500.0) {
+        return;
+    }
+    avgFrameMs = avgFrameMs == 0.0 ? frameMs : avgFrameMs * 0.9 + frameMs * 0.1;
+
+    if (std::chrono::duration<double>(now - lastChange).count() < 1.0) {
+        return;
+    }
+    lastChange = now;
+
+    const float minScale = std::max(0.4f, std::min(userMax, CVarGetFloat(CVAR_SETTING("DynamicResolutionMin"), 0.5f)));
+    double targetMs = 1000.0 / std::max(gameFps, 1);
+    float next = current;
+    if (avgFrameMs > targetMs * 1.10) {
+        next = std::max(minScale, current - 0.1f);
+        goodSeconds = 0;
+    } else if (avgFrameMs < targetMs * 1.02) {
+        // Only go back up after a few smooth seconds, to avoid flickering between sizes
+        if (++goodSeconds >= 3) {
+            next = std::min(userMax, current + 0.05f);
+            goodSeconds = 0;
+        }
+    } else {
+        goodSeconds = 0;
+    }
+    if (next != current) {
+        current = next;
+        window->SetResolutionMultiplier(current);
+    }
+}
+
 extern "C" void Graph_ProcessGfxCommands(Gfx* commands) {
     {
         std::unique_lock<std::mutex> Lock(audio.mutex);
@@ -1513,6 +1576,8 @@ extern "C" void Graph_ProcessGfxCommands(Gfx* commands) {
     }
 
     RunCommands(commands, mtx_replacements);
+
+    UpdateDynamicResolution(original_fps);
 
     last_fps = fps;
     last_update_rate = R_UPDATE_RATE;
