@@ -1581,7 +1581,7 @@ void SohInputEditorWindow::DrawLinkTab() {
             DrawStickSection(portIndex, Ship::LEFT, 0);
         }
 
-        if (ImGui::CollapsingHeader(SohLoc::Label("Additional (\"Right\") Stick").c_str()) {
+        if (ImGui::CollapsingHeader(SohLoc::Label("Additional (\"Right\") Stick").c_str())) {
             DrawStickSection(portIndex, Ship::RIGHT, 1, CHIP_COLOR_N64_YELLOW);
         }
 
