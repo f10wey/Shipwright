@@ -18,7 +18,8 @@ namespace UIWidgets {
 static std::string VisibleLabel(const char* label) {
     std::string s(label);
     size_t pos = s.find("##");
-    return pos == std::string::npos ? s : s.substr(0, pos);
+    // Translate here as well: slider labels from custom windows (controller config) are not pre-translated
+    return SohLoc::Text(pos == std::string::npos ? s : s.substr(0, pos));
 }
 
 void CVarChanged(const char* cvarName) {
