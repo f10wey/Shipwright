@@ -64,6 +64,13 @@ typedef enum {
     ZFIGHT_FIX_NO_VANISH,
 } ZFightingFixType;
 
+// Phones run at high resolution, where the dirt paths vanish around Link without the fix
+#ifdef __ANDROID__
+#define DIRT_PATH_FIX_DEFAULT ZFIGHT_FIX_NO_VANISH
+#else
+#define DIRT_PATH_FIX_DEFAULT ZFIGHT_FIX_DISABLED
+#endif
+
 typedef enum {
     BONK_DAMAGE_NONE,
     BONK_DAMAGE_QUARTER_HEART,

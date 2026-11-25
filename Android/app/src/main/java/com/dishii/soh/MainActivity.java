@@ -82,6 +82,9 @@ public class MainActivity extends SDLActivity{
         }
     }
 
+    // Bump only when the ROM extraction format changes (new SoH base version).
+    private static final String OTR_FORMAT = "9.0.2";
+
     private void deleteOutdatedAssets() {
         File targetRootFolder = new File(Environment.getExternalStorageDirectory(), "SOH");
 
@@ -90,10 +93,37 @@ public class MainActivity extends SDLActivity{
         File ootMqFile = new File(targetRootFolder, "oot-mq.otr");
         File assetsFolder = new File(targetRootFolder, "assets");
 
+        // soh.otr and assets ship inside the APK and are copied back on start, so refresh them.
         deleteIfExists(sohFile);
-        deleteIfExists(ootFile);
-        deleteIfExists(ootMqFile);
         deleteRecursiveIfExists(assetsFolder);
+
+        // oot.otr / oot-mq.otr are extracted from the user's ROM, which takes minutes.
+        // Keep them across reinstalls and updates unless the extracted format changes.
+        // The marker lives in the SOH folder so it survives uninstalling the app.
+        File marker = new File(targetRootFolder, ".otr-format");
+        String stored = "";
+        try {
+            if (marker.exists()) {
+                stored = new String(java.nio.file.Files.readAllBytes(marker.toPath())).trim();
+            }
+        } catch (Exception e) {
+            Log.w("deleteAssets", "Cannot read " + marker, e);
+        }
+        boolean hasOtr = ootFile.exists() || ootMqFile.exists();
+        // A missing marker next to an existing oot.otr means it came from one of our earlier
+        // builds, which all use the same 9.0.2 extractor, so it is still valid.
+        if (!stored.isEmpty() && !stored.equals(OTR_FORMAT)) {
+            deleteIfExists(ootFile);
+            deleteIfExists(ootMqFile);
+        }
+        try {
+            if (hasOtr || !stored.equals(OTR_FORMAT)) {
+                targetRootFolder.mkdirs();
+                java.nio.file.Files.write(marker.toPath(), OTR_FORMAT.getBytes());
+            }
+        } catch (Exception e) {
+            Log.w("deleteAssets", "Cannot write " + marker, e);
+        }
     }
 
     private void deleteIfExists(File file) {
