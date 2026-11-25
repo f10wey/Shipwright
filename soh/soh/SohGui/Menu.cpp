@@ -9,8 +9,6 @@
 #include <variant>
 #include <imgui_internal.h>
 #include <cmath>
-
-static void TouchDragScroll();
 #include <spdlog/fmt/fmt.h>
 #include "variables.h"
 #include <tuple>
@@ -30,6 +28,7 @@ extern std::shared_ptr<SohModalWindow> mModalWindow;
 }
 
 namespace Ship {
+static void TouchDragScroll();
 std::string disabledTempTooltip;
 const char* disabledTooltip;
 bool disabledValue = false;
