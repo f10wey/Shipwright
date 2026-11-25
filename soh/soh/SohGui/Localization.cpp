@@ -1114,6 +1114,16 @@ static const std::unordered_map<std::string, const char*> sRussian = {
     { "Frame Advance is Disabled", "Покадровый режим выключен" },
     { "Advanced Resolution is Disabled", "Расширенное разрешение выключено" },
     { "Vertical Resolution Toggle is Off", "Вертикальное разрешение выключено" },
+
+    // ---- Android 9.0.2 wording ----
+    { "Infinite...", "Бесконечно..." },
+    { "Connecting...", "Подключение..." },
+    { "Alt Assets Tab hotkey", "Переключать моды клавишей Tab" },
+    { "Ship Of Harkinian", "Ship of Harkinian" },
+    { "Allows pressing the Tab key to toggle alternate assets", "Клавиша Tab включает и выключает альтернативные ресурсы (моды)." },
+    { "Configure what happens when starting or resetting the game.\n\nDefault: LUS logo -> N64 logo\nAuthentic: N64 logo only\nFile Select: Skip to file select menu", "Что происходит при запуске и перезапуске игры.\n\nПо умолчанию: логотип LUS -> логотип N64\nКак в оригинале: только логотип N64\nВыбор файла: сразу к выбору сохранения" },
+    { "Enables text to speech for in game dialog", "Синтезатор речи зачитывает диалоги в игре." },
+    { "Removes tearing, but clamps your max FPS to your displays refresh rate.", "Убирает разрывы картинки, но ограничивает FPS частотой монитора." },
 };
 
 const char* Text(const char* english) {

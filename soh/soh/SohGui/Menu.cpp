@@ -7,6 +7,8 @@
 #include "window/gui/GuiElement.h"
 #include "SohModals.h"
 #include <variant>
+#include <imgui_internal.h>
+#include <cmath>
 #include <spdlog/fmt/fmt.h>
 #include "variables.h"
 #include <tuple>
@@ -189,6 +191,7 @@ bool ModernMenuHeaderEntry(std::string label) {
 
 uint32_t Menu::DrawSearchResults(std::string& menuSearchText) {
     ImGui::BeginChild("Search Results");
+    TouchDragScroll();
     int searchCount = 0;
     for (auto& menuLabel : menuOrder) {
         auto& menuEntry = menuEntries.at(menuLabel);
@@ -230,6 +233,34 @@ void Menu::AddMenuEntry(std::string entryName, const char* entryCvar) {
 
 std::unordered_map<uint32_t, disabledInfo>& Menu::GetDisabledMap() {
     return disabledMap;
+}
+
+
+// Touch scrolling for menu panels: dragging a finger vertically scrolls the panel under it, even when the drag
+// starts on a checkbox or button (the pressed widget is released so it is not toggled). ImGui has no built-in
+// touch scrolling, which made long option lists on phones reachable only through the thin scrollbar.
+static void TouchDragScroll() {
+    ImGuiContext& g = *ImGui::GetCurrentContext();
+    ImGuiIO& io = ImGui::GetIO();
+    if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
+        return;
+    }
+    if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+        return;
+    }
+    ImVec2 drag = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0.0f);
+    float threshold = ImGui::GetFontSize() * 0.6f;
+    if (std::fabs(drag.y) < threshold || std::fabs(drag.y) < std::fabs(drag.x)) {
+        return;
+    }
+    // Sliders are dragged horizontally; never steal a slider that is being moved sideways
+    if (g.ActiveId != 0 && g.ActiveIdIsJustActivated == false && std::fabs(drag.x) > threshold) {
+        return;
+    }
+    if (g.ActiveId != 0) {
+        ImGui::ClearActiveID();
+    }
+    ImGui::SetScrollY(ImGui::GetScrollY() - io.MouseDelta.y);
 }
 
 void Menu::MenuDrawItem(WidgetInfo& widget, uint32_t width, UIWidgets::Colors menuThemeIndex) {
@@ -592,6 +623,10 @@ void Menu::DrawElement() {
     // Full screen menu with widths below 1280, heights below 800.
     // 5% of screen width/height padding on both sides above those resolutions.
     // Menu width will never exceed a 16:9 aspect ratio.
+#ifdef __ANDROID__
+    // Scrollbars wide enough to grab with a finger
+    ImGui::GetStyle().ScrollbarSize = std::fmaxf(ImGui::GetStyle().ScrollbarSize, ImGui::GetFontSize() * 1.1f);
+#endif
     ImVec2 menuSize = { windowWidth, windowHeight };
     if (windowWidth > 1280) {
         menuSize.x = std::fminf(windowWidth * 0.9f, (windowHeight * 1.77f));
@@ -742,6 +777,10 @@ void Menu::DrawElement() {
     if (menuSize.x > 1600) {
         sidebarWidth = menuSize.x * 0.15f;
     }
+#ifdef __ANDROID__
+    // Fit the (translated, often longer) section names at the large menu scale used on phones
+    sidebarWidth = std::fmaxf(sidebarWidth, ImGui::GetFontSize() * 9.5f);
+#endif
 
     const char* sidebarCvar = menuEntries.at(headerIndex).sidebarCvar;
 
@@ -754,6 +793,7 @@ void Menu::DrawElement() {
     ImGui::SetNextWindowSizeConstraints({ sidebarWidth, 0 }, { sidebarWidth, columnHeight });
     ImGui::BeginChild((menuEntries.at(headerIndex).label + " Section").c_str(), { sidebarWidth, columnHeight * 3 },
                       ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysAutoResize, ImGuiWindowFlags_NoTitleBar);
+    TouchDragScroll();
     for (auto& sidebarLabel : menuEntries.at(headerIndex).sidebarOrder) {
         std::string nextIndex = "";
         UIWidgets::PushStyleButton(menuThemeIndex);
@@ -791,6 +831,38 @@ void Menu::DrawElement() {
     if (windowWidth < 800) {
         columns = 1;
     }
+#ifdef __ANDROID__
+    // Only use as many columns as fit at the current font size, so options are not squeezed or cut off
+    columns = std::max(1, std::min(columns, static_cast<int>(sectionWidth / (ImGui::GetFontSize() * 19.0f))));
+#endif
+    // Regroup the widgets when fewer columns are shown than the section defines, so nothing ends up in a
+    // column pushed outside the visible area
+    std::vector<std::vector<WidgetInfo*>> columnLists;
+    {
+        auto& groups = sidebar->at(sectionIndex).columnWidgets;
+        if (columns >= (int)groups.size()) {
+            for (auto& g : groups) {
+                std::vector<WidgetInfo*> list;
+                for (auto& w : g) {
+                    list.push_back(&w);
+                }
+                columnLists.push_back(list);
+            }
+        } else {
+            std::vector<WidgetInfo*> all;
+            for (auto& g : groups) {
+                for (auto& w : g) {
+                    all.push_back(&w);
+                }
+            }
+            columnLists.resize(std::max(columns, 1));
+            size_t perColumn = (all.size() + columnLists.size() - 1) / columnLists.size();
+            for (size_t k = 0; k < all.size(); k++) {
+                columnLists[std::min(k / std::max<size_t>(perColumn, 1), columnLists.size() - 1)].push_back(all[k]);
+            }
+        }
+        columnFuncs = columnLists.size();
+    }
     float columnWidth = (sectionWidth - style.ItemSpacing.x * columns) / columns;
     bool useColumns = columns > 1;
     if (!useColumns || (headerSearch && menuSearchText.length() > 0)) {
@@ -798,6 +870,7 @@ void Menu::DrawElement() {
         ImGui::SetNextWindowSizeConstraints({ sectionWidth, 0 }, { sectionWidth, columnHeight });
         ImGui::BeginChild(sectionMenuId.c_str(), { sectionWidth, windowHeight * 4 }, ImGuiChildFlags_AutoResizeY,
                           ImGuiWindowFlags_NoTitleBar);
+        TouchDragScroll();
     }
     if (headerSearch && menuSearchText.length() > 0) {
         uint32_t searchCount = DrawSearchResults(menuSearchText);
@@ -830,10 +903,10 @@ void Menu::DrawElement() {
                 ImGui::SetNextWindowSizeConstraints({ columnWidth, 0 }, { columnWidth, columnHeight });
                 ImGui::BeginChild(sectionId.c_str(), { columnWidth, windowHeight * 4 }, ImGuiChildFlags_AutoResizeY,
                                   ImGuiWindowFlags_NoTitleBar);
+                TouchDragScroll();
             }
-            // for (auto& entryName : sidebar->at(sectionIndex).sidebarOrder) {
-            for (auto& entry : sidebar->at(sectionIndex).columnWidgets.at(i)) {
-                MenuDrawItem(entry, 90 / sidebar->at(sectionIndex).columnCount, menuThemeIndex);
+            for (auto* entry : columnLists.at(i)) {
+                MenuDrawItem(*entry, 90 / std::max(columns, 1), menuThemeIndex);
             }
             //}
             if (useColumns) {

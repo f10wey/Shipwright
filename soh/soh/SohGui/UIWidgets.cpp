@@ -13,6 +13,14 @@
 
 namespace UIWidgets {
 
+// Slider labels are printf formats ("Volume: %d %%"); drop the "##id" part so it is neither shown nor
+// parsed as extra format arguments (the translation layer appends "##English" to keep IDs stable).
+static std::string VisibleLabel(const char* label) {
+    std::string s(label);
+    size_t pos = s.find("##");
+    return pos == std::string::npos ? s : s.substr(0, pos);
+}
+
 // Automatically adds newlines to break up text longer than a specified number of characters
 // Manually included newlines will still be respected and reset the line length
 // If line is midword when it hits the limit, text should break at the last encountered space
@@ -536,7 +544,7 @@ bool SliderInt(const char* label, int32_t* value, const IntSliderOptions& option
     }
     ImGui::AlignTextToFramePadding();
     if (options.alignment == ComponentAlignments::Right) {
-        ImGui::Text(label, *value);
+        ImGui::Text(VisibleLabel(label).c_str(), *value);
         if (options.labelPosition == LabelPositions::Above) {
             ImGui::NewLine();
             ImGui::SameLine(ImGui::GetContentRegionAvail().x - width);
@@ -547,7 +555,7 @@ bool SliderInt(const char* label, int32_t* value, const IntSliderOptions& option
         }
     } else if (options.alignment == ComponentAlignments::Left) {
         if (options.labelPosition == LabelPositions::Above) {
-            ImGui::Text(label, *value);
+            ImGui::Text(VisibleLabel(label).c_str(), *value);
         }
     }
     if (options.showButtons) {
@@ -592,11 +600,11 @@ bool SliderInt(const char* label, int32_t* value, const IntSliderOptions& option
     if (options.alignment == ComponentAlignments::Left) {
         if (options.labelPosition == LabelPositions::Near) {
             ImGui::SameLine();
-            ImGui::Text(label, *value);
+            ImGui::Text(VisibleLabel(label).c_str(), *value);
         } else if (options.labelPosition == LabelPositions::Far || options.labelPosition == LabelPositions::None) {
             ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(label).x +
                             ImGui::GetStyle().ItemSpacing.x);
-            ImGui::Text(label, *value);
+            ImGui::Text(VisibleLabel(label).c_str(), *value);
         }
     }
     PopStyleSlider();
@@ -672,7 +680,7 @@ bool SliderFloat(const char* label, float* value, const FloatSliderOptions& opti
     }
     ImGui::AlignTextToFramePadding();
     if (options.alignment == ComponentAlignments::Right) {
-        ImGui::Text(label, *value);
+        ImGui::Text(VisibleLabel(label).c_str(), *value);
         if (options.labelPosition == LabelPositions::Above) {
             ImGui::NewLine();
             ImGui::SameLine(ImGui::GetContentRegionAvail().x - width);
@@ -685,7 +693,7 @@ bool SliderFloat(const char* label, float* value, const FloatSliderOptions& opti
         }
     } else if (options.alignment == ComponentAlignments::Left) {
         if (options.labelPosition == LabelPositions::Above) {
-            ImGui::Text(label, *value);
+            ImGui::Text(VisibleLabel(label).c_str(), *value);
         }
     }
     if (options.showButtons) {
@@ -724,10 +732,10 @@ bool SliderFloat(const char* label, float* value, const FloatSliderOptions& opti
     if (options.alignment == ComponentAlignments::Left) {
         if (options.labelPosition == LabelPositions::Near) {
             ImGui::SameLine();
-            ImGui::Text(label, *value);
+            ImGui::Text(VisibleLabel(label).c_str(), *value);
         } else if (options.labelPosition == LabelPositions::Far || options.labelPosition == LabelPositions::None) {
             ImGui::SameLine(ImGui::GetContentRegionAvail().x - labelSpacing);
-            ImGui::Text(label, *value);
+            ImGui::Text(VisibleLabel(label).c_str(), *value);
         }
     }
     PopStyleSlider();
@@ -773,13 +781,13 @@ bool InputString(const char* label, std::string* value, const InputOptions& opti
     float width = (options.size == ImVec2(0, 0)) ? ImGui::GetContentRegionAvail().x : options.size.x;
     if (options.alignment == ComponentAlignments::Left) {
         if (options.labelPosition == LabelPositions::Above) {
-            ImGui::Text(label, *value->c_str());
+            ImGui::Text(VisibleLabel(label).c_str(), *value->c_str());
         }
     } else if (options.alignment == ComponentAlignments::Right) {
         if (options.labelPosition == LabelPositions::Above) {
             ImGui::NewLine();
             ImGui::SameLine(width - ImGui::CalcTextSize(label).x);
-            ImGui::Text(label, *value->c_str());
+            ImGui::Text(VisibleLabel(label).c_str(), *value->c_str());
         }
     }
     ImGui::SetNextItemWidth(width);
@@ -829,13 +837,13 @@ bool InputInt(const char* label, int32_t* value, const InputOptions& options) {
     float width = (options.size == ImVec2(0, 0)) ? ImGui::GetContentRegionAvail().x : options.size.x;
     if (options.alignment == ComponentAlignments::Left) {
         if (options.labelPosition == LabelPositions::Above) {
-            ImGui::Text(label, *value);
+            ImGui::Text(VisibleLabel(label).c_str(), *value);
         }
     } else if (options.alignment == ComponentAlignments::Right) {
         if (options.labelPosition == LabelPositions::Above) {
             ImGui::NewLine();
             ImGui::SameLine(width - ImGui::CalcTextSize(label).x);
-            ImGui::Text(label, *value);
+            ImGui::Text(VisibleLabel(label).c_str(), *value);
         }
     }
     ImGui::SetNextItemWidth(width);
