@@ -31,6 +31,29 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Restore signing key
+        id: key
+        uses: actions/cache/restore@v4
+        with:
+          path: keystore
+          key: soh-ru-signing-key-v1
+
+      - name: Create signing key (first run only)
+        if: steps.key.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p keystore
+          keytool -genkeypair -v -keystore keystore/soh-ru.keystore -alias soh \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass soh-ru-local -keypass soh-ru-local \
+            -dname "CN=SoH RU, O=f10wey, C=UA"
+
+      - name: Save signing key
+        if: steps.key.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: keystore
+          key: soh-ru-signing-key-v1
+
       - name: Setup and build the project
         run: |
           cd docker

@@ -8,6 +8,18 @@ else {
 }
 
 android {
+    signingConfigs {
+        ru {
+            // Persistent key restored by CI from the Actions cache (never committed).
+            def ks = rootProject.file('../keystore/soh-ru.keystore')
+            if (ks.exists()) {
+                storeFile ks
+                storePassword 'soh-ru-local'
+                keyAlias 'soh'
+                keyPassword 'soh-ru-local'
+            }
+        }
+    }
     ndkVersion "26.0.10792818"
     namespace 'com.dishii.soh'
     compileSdkVersion 31
@@ -20,7 +32,7 @@ android {
         }
         minSdkVersion 24
         targetSdkVersion 33
-        versionCode 8
+        versionCode 9
         versionName "9.0.2"
     }
     buildTypes {
@@ -37,7 +49,7 @@ android {
             minifyEnabled false
             debuggable false
             jniDebuggable false
-            signingConfig signingConfigs.debug
+            signingConfig(rootProject.file('../keystore/soh-ru.keystore').exists() ? signingConfigs.ru : signingConfigs.debug)
             externalNativeBuild {
                 cmake {
                     arguments "-DSDL_SHARED=ON", "-DANDROID_STL=c++_static", "-DHAVE_LD_VERSION_SCRIPT=OFF",'-DUSE_OPENGLES=ON'
