@@ -12733,6 +12733,26 @@ void Player_Draw(Actor* thisx, PlayState* play2) {
     CLOSE_DISPS(play->state.gfxCtx);
 }
 
+
+#ifdef __ANDROID__
+extern float touchAimAccumX;
+extern float touchAimAccumY;
+#endif
+
+// Swipe on the right side of the touch screen aims like a mouse (Android only)
+static void Player_TakeTouchAim(f32* aimX, f32* aimY) {
+#ifdef __ANDROID__
+    // Clamp so swipes made before entering first person don't cause a big jump
+    *aimX = CLAMP(touchAimAccumX, -600.0f, 600.0f) * 0.5f;
+    *aimY = CLAMP(touchAimAccumY, -600.0f, 600.0f) * 0.5f;
+    touchAimAccumX = 0;
+    touchAimAccumY = 0;
+#else
+    *aimX = 0;
+    *aimY = 0;
+#endif
+}
+
 void Player_Destroy(Actor* thisx, PlayState* play) {
     Player* this = (Player*)thisx;
 
@@ -12768,6 +12788,9 @@ s16 func_8084ABD8(PlayState* play, Player* this, s32 arg2, s16 arg3) {
 
     GameInteractor_ExecuteOnPlayerFirstPersonControl(this);
 
+    f32 touchAimX, touchAimY;
+    Player_TakeTouchAim(&touchAimX, &touchAimY);
+
     if (!func_8002DD78(this) && !func_808334B4(this) && (arg2 == 0)) { // First person without weapon
         // Y Axis
         if (!CVarGetInteger(CVAR_SETTING("MoveInFirstPerson"), 0)) {
@@ -12779,6 +12802,7 @@ s16 func_8084ABD8(PlayState* play, Player* this, s32 arg2, s16 arg3) {
         if (fabsf(sControlInput->cur.gyro_x) > 0.01f) {
             temp2 += (-sControlInput->cur.gyro_x) * 750.0f;
         }
+        temp2 += touchAimY * invertYAxisMulti * yAxisMulti;
         if (CVarGetInteger(CVAR_SETTING("DisableFirstPersonAutoCenterView"), 0)) {
             this->actor.focus.rot.x += temp2 * 0.1f;
             this->actor.focus.rot.x = CLAMP(this->actor.focus.rot.x, -14000, 14000);
@@ -12797,6 +12821,7 @@ s16 func_8084ABD8(PlayState* play, Player* this, s32 arg2, s16 arg3) {
         if (fabsf(sControlInput->cur.gyro_y) > 0.01f) {
             temp2 += (sControlInput->cur.gyro_y) * 750.0f * invertXAxisMulti;
         }
+        temp2 += -touchAimX * invertXAxisMulti * xAxisMulti;
         temp2 = CLAMP(temp2, -3000, 3000);
         this->actor.focus.rot.y += temp2;
     } else { // First person with weapon
@@ -12816,6 +12841,7 @@ s16 func_8084ABD8(PlayState* play, Player* this, s32 arg2, s16 arg3) {
         if (fabsf(sControlInput->cur.gyro_x) > 0.01f) {
             temp3 += (-sControlInput->cur.gyro_x) * 750.0f;
         }
+        temp3 += touchAimY * invertYAxisMulti * yAxisMulti;
         this->actor.focus.rot.x += temp3;
         this->actor.focus.rot.x = CLAMP(this->actor.focus.rot.x, -temp1, temp1);
 
@@ -12836,6 +12862,7 @@ s16 func_8084ABD8(PlayState* play, Player* this, s32 arg2, s16 arg3) {
         if (fabsf(sControlInput->cur.gyro_y) > 0.01f) {
             temp3 += (sControlInput->cur.gyro_y) * 750.0f * invertXAxisMulti;
         }
+        temp3 += -touchAimX * invertXAxisMulti * xAxisMulti;
         temp2 += temp3;
         this->actor.focus.rot.y = CLAMP(temp2, -temp1, temp1) + this->actor.shape.rot.y;
     }

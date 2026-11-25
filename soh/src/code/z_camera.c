@@ -42,14 +42,19 @@ s32 Camera_UpdateWater(Camera* camera);
 
 float touchCameraYaw=0;
 float touchCameraPitch=0;
+// Swipe distance since the last frame, used for aiming the slingshot/bow/hookshot and first-person view
+float touchAimAccumX = 0;
+float touchAimAccumY = 0;
 
 extern void JNICALL Java_com_dishii_soh_MainActivity_setCameraState(JNIEnv *env, jobject jobj, jint axis, jfloat value) {
     switch(axis){
         case 0:
             touchCameraYaw=value;
+            touchAimAccumX += value;
             break;
         case 1:
             touchCameraPitch=value;
+            touchAimAccumY += value;
             break;
     }
 }
