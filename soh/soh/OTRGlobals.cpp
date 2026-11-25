@@ -1166,7 +1166,12 @@ extern "C" void InitOTR() {
         }
 
         bool generatedOtrIsMQ = false;
+#ifdef __ANDROID__
+        // Phones: start right away; the ROM is found in SOH/roms or SOH (or picked once if none is there)
+        if (true) {
+#else
         if (Extractor::ShowYesNoBox("No OTR Files", "No OTR files found. Generate one now?") == IDYES) {
+#endif
             Extractor extract;
             if (!extract.Run(Ship::Context::GetAppDirectoryPath(appShortName))) {
                 Extractor::ShowErrorBox("Error", "An error occured, no OTR file was generated.\n\nExiting...");
@@ -1177,7 +1182,12 @@ extern "C" void InitOTR() {
         } else {
             exit(1);
         }
+#ifdef __ANDROID__
+        // Don't offer a second (Master Quest) extraction on phones; it mostly led to a "wrong game type" error
+        if (false) {
+#else
         if (Extractor::ShowYesNoBox("Extraction Complete", "ROM Extracted. Extract another?") == IDYES) {
+#endif
             Extractor extract;
             if (!extract.Run(Ship::Context::GetAppDirectoryPath(appShortName),
                              generatedOtrIsMQ ? RomSearchMode::Vanilla : RomSearchMode::MQ)) {

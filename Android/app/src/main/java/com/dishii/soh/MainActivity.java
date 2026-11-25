@@ -173,8 +173,82 @@ public class MainActivity extends SDLActivity{
         }
     }
 
+    // ---------------------------------------------------------------- ROM extraction progress screen
+    // Called from native code (Extractor::CallZapd) while the ROM is converted into oot.otr. The conversion blocks
+    // the game thread, so without this the screen just stays black for several minutes.
+    private android.app.AlertDialog extractionDialog;
+    private final android.os.Handler extractionHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable extractionTicker;
+    private static final long EXPECTED_OTR_BYTES = 34L * 1024 * 1024;
+
+    public void showExtractionProgress(String watchPath) {
+        runOnUiThread(() -> {
+            hideExtractionProgressNow();
+            final long start = System.currentTimeMillis();
+            android.widget.LinearLayout box = new android.widget.LinearLayout(this);
+            box.setOrientation(android.widget.LinearLayout.VERTICAL);
+            int pad = (int) (20 * getResources().getDisplayMetrics().density);
+            box.setPadding(pad, pad, pad, pad);
+            android.widget.ProgressBar bar = new android.widget.ProgressBar(this, null,
+                    android.R.attr.progressBarStyleHorizontal);
+            bar.setMax(100);
+            bar.setIndeterminate(true);
+            android.widget.TextView status = new android.widget.TextView(this);
+            status.setPadding(0, pad / 2, 0, 0);
+            status.setText("Подготовка...");
+            box.addView(bar);
+            box.addView(status);
+            extractionDialog = new android.app.AlertDialog.Builder(this)
+                    .setTitle("Создаю файл игры из ROM")
+                    .setView(box)
+                    .setCancelable(false)
+                    .create();
+            extractionDialog.show();
+            extractionTicker = new Runnable() {
+                @Override
+                public void run() {
+                    long seconds = (System.currentTimeMillis() - start) / 1000;
+                    long bytes = watchPath != null ? new File(watchPath).length() : 0;
+                    String text = String.format(java.util.Locale.US, "Прошло: %d:%02d", seconds / 60, seconds % 60);
+                    if (bytes > 0) {
+                        int percent = (int) Math.min(99, bytes * 100 / EXPECTED_OTR_BYTES);
+                        bar.setIndeterminate(false);
+                        bar.setProgress(percent);
+                        text += String.format(java.util.Locale.US, "\nГотово примерно: %d%% (%.1f МБ)",
+                                percent, bytes / 1048576.0);
+                    } else {
+                        text += "\nЧитаю ROM...";
+                    }
+                    text += "\n\nОбычно это занимает 3–10 минут. Не закрывай приложение и не выключай экран.";
+                    status.setText(text);
+                    extractionHandler.postDelayed(this, 1000);
+                }
+            };
+            extractionHandler.post(extractionTicker);
+            // Keep the screen on while extracting
+            getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        });
+    }
+
+    public void hideExtractionProgress() {
+        runOnUiThread(this::hideExtractionProgressNow);
+    }
+
+    private void hideExtractionProgressNow() {
+        if (extractionTicker != null) {
+            extractionHandler.removeCallbacks(extractionTicker);
+            extractionTicker = null;
+        }
+        if (extractionDialog != null) {
+            extractionDialog.dismiss();
+            extractionDialog = null;
+        }
+    }
+
     public void checkAndSetupFiles() {
         File targetRootFolder = new File(Environment.getExternalStorageDirectory(), "SOH");
+        // Dedicated folder for ROMs: anything placed here is found automatically on first start
+        new File(targetRootFolder, "roms").mkdirs();
         File assetsFolder = new File(targetRootFolder, "assets");
         File sohOtrFile = new File(targetRootFolder, "soh.otr");
 

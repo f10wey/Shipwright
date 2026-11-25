@@ -293,6 +293,25 @@ void Extractor::GetRoms(std::vector<std::string>& roms) {
     }
     closedir(d);
 #elif defined(__ANDROID__)
+    // Look in the game folder first: SOH/roms (dedicated ROM folder) and SOH itself
+    for (const std::string& dirPath : { mSearchPath + "/roms", mSearchPath }) {
+        std::error_code ec;
+        if (!std::filesystem::is_directory(dirPath, ec)) {
+            continue;
+        }
+        for (const auto& file : std::filesystem::directory_iterator(dirPath, ec)) {
+            if (!file.is_regular_file()) {
+                continue;
+            }
+            auto ext = file.path().extension().string();
+            for (auto& c : ext) {
+                c = (char)tolower(c);
+            }
+            if (ext == ".n64" || ext == ".z64" || ext == ".v64") {
+                roms.push_back(file.path().string());
+            }
+        }
+    }
     const char* androidAssetPath = SDL_AndroidGetExternalStoragePath();
     if (androidAssetPath == NULL) {
         printf("Error accessing Android assets directory: %s\n", SDL_GetError());
@@ -571,13 +590,21 @@ bool Extractor::Run(std::string searchPath, RomSearchMode searchMode) {
         inFile.close();
         BitConverter::RomToBigEndian(mRomData.get(), mCurRomSize);
 
+#ifdef __ANDROID__
+        // On phones the ROM is picked automatically (first compatible one); the prompt was easy to miss
+        int option = (int)ButtonId::YES;
+#else
         int option = ShowRomPickBox(GetRomVerCrc());
+#endif
 
         if (option == (int)ButtonId::YES) {
             if (!ValidateRom(true)) {
                 if (rom == roms.back()) {
                     ShowCrcErrorBox();
                 } else {
+#ifdef __ANDROID__
+                    continue;
+#endif
                     ShowErrorBox(
                         "Rom CRC invalid",
                         "Rom CRC did not match the list of known compatible roms. Trying the next one...\n\n"
@@ -743,6 +770,24 @@ bool Extractor::CallZapd(std::string installPath, std::string exportdir) {
     // extraction.
     ShowWindow(cmdWindow, SW_SHOW);
     SetWindowPos(cmdWindow, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+#elif defined(__ANDROID__)
+    // Show a progress screen (spinner, elapsed time, size of the file being built) instead of a black screen
+    {
+        JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+        jobject activity = (jobject)SDL_AndroidGetActivity();
+        jclass cls = env->GetObjectClass(activity);
+        jmethodID show = env->GetMethodID(cls, "showExtractionProgress", "(Ljava/lang/String;)V");
+        if (show != nullptr) {
+            std::string watchPath = tempdir + "/" + otrFile;
+            jstring jpath = env->NewStringUTF(watchPath.c_str());
+            env->CallVoidMethod(activity, show, jpath);
+            env->DeleteLocalRef(jpath);
+        } else {
+            env->ExceptionClear();
+        }
+        env->DeleteLocalRef(cls);
+        env->DeleteLocalRef(activity);
+    }
 #else
     // Show extraction in background message until linux/mac can have visual progress
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Extracting",
@@ -752,6 +797,22 @@ bool Extractor::CallZapd(std::string installPath, std::string exportdir) {
 #endif
 
     zapd_main(argc, (char**)argv.data());
+
+#ifdef __ANDROID__
+    {
+        JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+        jobject activity = (jobject)SDL_AndroidGetActivity();
+        jclass cls = env->GetObjectClass(activity);
+        jmethodID hide = env->GetMethodID(cls, "hideExtractionProgress", "()V");
+        if (hide != nullptr) {
+            env->CallVoidMethod(activity, hide);
+        } else {
+            env->ExceptionClear();
+        }
+        env->DeleteLocalRef(cls);
+        env->DeleteLocalRef(activity);
+    }
+#endif
 
 #ifdef _WIN32
     // Hide the command window again.
