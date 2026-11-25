@@ -13,6 +13,14 @@
 
 namespace UIWidgets {
 
+// Slider labels are printf formats ("Volume: %d %%"); drop the "##id" part so it is neither shown nor
+// parsed as extra format arguments (the translation layer appends "##English" to keep IDs stable).
+static std::string VisibleLabel(const char* label) {
+    std::string s(label);
+    size_t pos = s.find("##");
+    return pos == std::string::npos ? s : s.substr(0, pos);
+}
+
 void CVarChanged(const char* cvarName) {
     Ship::Context::GetRawInstance()->GetWindow()->GetGui()->SaveConsoleVariablesNextFrame();
     ShipInit::Init(cvarName);
@@ -798,13 +806,13 @@ bool InputString(const char* label, std::string* value, const InputOptions& opti
     if (labelSize.x != 0) {
         if (options.alignment == ComponentAlignments::Left) {
             if (options.labelPosition == LabelPositions::Above) {
-                ImGui::Text(label, *value->c_str());
+                ImGui::Text(VisibleLabel(label).c_str(), *value->c_str());
             }
         } else if (options.alignment == ComponentAlignments::Right) {
             if (options.labelPosition == LabelPositions::Above) {
                 ImGui::NewLine();
                 ImGui::SameLine(width - ImGui::CalcTextSize(label).x);
-                ImGui::Text(label, *value->c_str());
+                ImGui::Text(VisibleLabel(label).c_str(), *value->c_str());
             }
         }
     }
@@ -860,13 +868,13 @@ bool InputInt(const char* label, int32_t* value, const InputOptions& options) {
     float width = (options.size == ImVec2(0, 0)) ? ImGui::GetContentRegionAvail().x : options.size.x;
     if (options.alignment == ComponentAlignments::Left) {
         if (options.labelPosition == LabelPositions::Above) {
-            ImGui::Text(label, *value);
+            ImGui::Text(VisibleLabel(label).c_str(), *value);
         }
     } else if (options.alignment == ComponentAlignments::Right) {
         if (options.labelPosition == LabelPositions::Above) {
             ImGui::NewLine();
             ImGui::SameLine(width - ImGui::CalcTextSize(label).x);
-            ImGui::Text(label, *value);
+            ImGui::Text(VisibleLabel(label).c_str(), *value);
         }
     }
     ImGui::SetNextItemWidth(width);
