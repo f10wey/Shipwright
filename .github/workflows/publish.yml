@@ -11,19 +11,15 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: soh-windows
-          run-id: 45563765536
+          name: build-artifacts
+          run-id: 45581727445
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: pc
+          path: android
       - name: Package
-        run: |
-          cp pc/soh.exe soh-ru-v4.exe
-          cp pc/soh.o2r soh-ru-v4.o2r
+        run: cp android/*.apk soh-android-ru-v4.apk
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ru-builds
           name: Russian menu builds
           prerelease: true
-          files: |
-            soh-ru-v4.exe
-            soh-ru-v4.o2r
+          files: soh-android-ru-v4.apk
