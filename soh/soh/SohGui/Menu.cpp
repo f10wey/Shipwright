@@ -642,6 +642,121 @@ void Menu::DrawElement() {
                       ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysAutoResize,
                       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
 
+#ifdef __ANDROID__
+    // Phones: header tabs, search and the quit/reset/close buttons go in a column on the left, so nothing is
+    // hidden behind the header's horizontal scrollbar; the section sidebar and options move to the right.
+    std::unordered_map<std::string, SidebarEntry>* sidebar = nullptr;
+    float headerHeight = 0;
+    std::string menuSearchText = "";
+    float headerColumnWidth = ImGui::GetFontSize() * 8.5f;
+    ImGui::SetNextWindowPos(pos + style.ItemSpacing);
+    ImGui::BeginChild("Header Column", { headerColumnWidth, menuSize.y - style.ItemSpacing.y * 2 }, 0,
+                      ImGuiWindowFlags_NoTitleBar);
+    TouchDragScroll();
+    for (auto& label : menuOrder) {
+        auto& entry = menuEntries.at(label);
+        std::string nextIndex = label;
+        UIWidgets::PushStyleButton(menuThemeIndex);
+        if (headerIndex != label) {
+            ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
+        }
+        if (ModernMenuHeaderEntry(entry.label)) {
+            if (headerSearch) {
+                menuSearch.Clear();
+            }
+            CVarSetString(headerCvar, label.c_str());
+            CVarSave();
+            nextIndex = label;
+        }
+        if (headerIndex != label) {
+            ImGui::PopStyleColor();
+        }
+        UIWidgets::PopStyleButton();
+        if (headerIndex == label) {
+            sidebar = &entry.sidebars;
+        }
+        if (nextIndex != label) {
+            headerIndex = nextIndex;
+        }
+    }
+    if (sidebar == nullptr) {
+        sidebar = &menuEntries.at(menuOrder.at(0)).sidebars;
+    }
+    if (headerSearch) {
+        ImGui::Spacing();
+        auto color = UIWidgets::ColorValues.at(menuThemeIndex);
+        color.w = 0.2f;
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, color);
+        menuSearch.Draw("##search", headerColumnWidth - style.ItemSpacing.x);
+        menuSearchText = menuSearch.InputBuf;
+        menuSearchText.erase(std::remove(menuSearchText.begin(), menuSearchText.end(), ' '), menuSearchText.end());
+        ImGui::PopStyleColor();
+    }
+    ImGui::Spacing();
+    UIWidgets::ButtonOptions options3 = {};
+    options3.color = UIWidgets::Colors::Red;
+    options3.size = UIWidgets::Sizes::Inline;
+    options3.tooltip = "Quit SoH";
+    if (UIWidgets::Button(ICON_FA_POWER_OFF, options3)) {
+        SohGui::mModalWindow->RegisterPopup(
+            "Quit SoH", "Are you sure you want to quit SoH?", "Quit", "Cancel",
+            []() {
+                std::shared_ptr<Menu> menu =
+                    static_pointer_cast<Menu>(Ship::Context::GetInstance()->GetWindow()->GetGui()->GetMenu());
+                if (!menu->IsMenuPopped()) {
+                    menu->ToggleVisibility();
+                }
+                Ship::Context::GetInstance()->GetWindow()->Close();
+            },
+            nullptr);
+    }
+    ImGui::PopStyleVar();
+    ImGui::SameLine();
+    UIWidgets::ButtonOptions options2 = {};
+    options2.color = UIWidgets::Colors::Red;
+    options2.size = UIWidgets::Sizes::Inline;
+    options2.tooltip = "Reset"
+#ifdef __APPLE__
+                       " (Command-R)"
+#elif !defined(__SWITCH__) && !defined(__WIIU__)
+                       " (Ctrl+R)"
+#else
+                       ""
+#endif
+        ;
+    if (UIWidgets::Button(ICON_FA_UNDO, options2)) {
+        std::reinterpret_pointer_cast<Ship::ConsoleWindow>(
+            Ship::Context::GetInstance()->GetWindow()->GetGui()->GetGuiWindow("Console"))
+            ->Dispatch("reset");
+    }
+    ImGui::SameLine();
+    UIWidgets::ButtonOptions options = {};
+    options.size = UIWidgets::Sizes::Inline;
+    options.tooltip = "Close Menu (Esc)";
+    if (UIWidgets::Button(ICON_FA_TIMES_CIRCLE, options)) {
+        ToggleVisibility();
+
+        // Update gamepad navigation after close based on if other menus are still visible
+        auto mImGuiIo = &ImGui::GetIO();
+        if (CVarGetInteger(CVAR_IMGUI_CONTROLLER_NAV, 0) &&
+            Ship::Context::GetInstance()->GetWindow()->GetGui()->GetMenuOrMenubarVisible()) {
+            mImGuiIo->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+        } else {
+            mImGuiIo->ConfigFlags &= ~ImGuiConfigFlags_NavEnableGamepad;
+        }
+    }
+
+    ImGui::EndChild();
+
+    pos.x += headerColumnWidth + style.ItemSpacing.x * 2;
+    window->DrawList->AddRectFilled(pos, pos + ImVec2{ 4, menuSize.y - style.ItemSpacing.y * 2 },
+                                    ImGui::GetColorU32({ 255, 255, 255, 255 }), true, style.WindowRounding);
+    pos.x += 4 + style.ItemSpacing.x;
+    float sectionHeight = menuSize.y - style.ItemSpacing.y * 2;
+    float columnHeight = sectionHeight - style.ItemSpacing.y * 4;
+    menuSize.x -= headerColumnWidth + 4 + style.ItemSpacing.x * 3;
+    ImGui::SetNextWindowPos(pos + style.ItemSpacing * 2);
+#else
     std::unordered_map<std::string, SidebarEntry>* sidebar;
     float headerHeight = headerSizes.at(0).y + style.FramePadding.y * 2;
     ImVec2 buttonSize = ImGui::CalcTextSize(ICON_FA_TIMES_CIRCLE) + style.FramePadding * 2;
@@ -772,6 +887,7 @@ void Menu::DrawElement() {
     float sectionHeight = menuSize.y - headerHeight - 4 - style.ItemSpacing.y * 2;
     float columnHeight = sectionHeight - style.ItemSpacing.y * 4;
     ImGui::SetNextWindowPos(pos + style.ItemSpacing * 2);
+#endif
 
     // Increase sidebar width on larger screens to accomodate people scaling their menus.
     float sidebarWidth = 200 - style.ItemSpacing.x;
