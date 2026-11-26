@@ -664,7 +664,8 @@ void SohMenu::AddMenuEnhancements() {
             CheckboxOptions().DefaultValue(true).Tooltip(
 #else
             CheckboxOptions().Tooltip(
-#endif"Adjusts the Horizontal Culling Plane to account for Widescreen Resolutions."));
+#endif
+                "Adjusts the Horizontal Culling Plane to account for Widescreen Resolutions."));
     AddWidget(path, "Cull Glitch Useful Actors", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("ExtendedCullingExcludeGlitchActors"))
         .PreFunc([](WidgetInfo& info) {
