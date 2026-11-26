@@ -46,6 +46,18 @@ float touchCameraPitch=0;
 float touchAimAccumX = 0;
 float touchAimAccumY = 0;
 
+extern PlayState* gPlayState;
+
+// Polled by the touch overlay to enlarge the note buttons while the ocarina is being played
+extern jboolean JNICALL Java_com_dishii_soh_MainActivity_isOcarinaMode(JNIEnv* env, jobject jobj) {
+    PlayState* play = gPlayState;
+    if (play == NULL) {
+        return JNI_FALSE;
+    }
+    s32 mode = play->msgCtx.msgMode;
+    return (mode >= MSGMODE_OCARINA_STARTING && mode <= MSGMODE_FROGS_WAITING) ? JNI_TRUE : JNI_FALSE;
+}
+
 // Touch jump button (X): set while the finger is on it
 volatile int touchJumpHeld = 0;
 

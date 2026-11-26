@@ -458,6 +458,7 @@ public class MainActivity extends SDLActivity{
     // Native method for setting button state
     public native void setButton(int button, boolean value);
     public native void setJumpHeld(boolean held);
+    public native boolean isOcarinaMode();
     public native void setCameraState(int axis, float value);
 
     // Native method for setting joystick axis value
@@ -564,6 +565,22 @@ public class MainActivity extends SDLActivity{
             touchEditor.enterEditMode();
             return true;
         });
+
+        // Bigger note buttons (A and C) while the ocarina is out
+        final android.os.Handler ocarinaPoll = new android.os.Handler(android.os.Looper.getMainLooper());
+        ocarinaPoll.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                boolean playing = false;
+                try {
+                    playing = isOcarinaMode();
+                } catch (Throwable t) {
+                    // Native library not ready yet
+                }
+                touchEditor.setOcarinaBoost(playing);
+                ocarinaPoll.postDelayed(this, 150);
+            }
+        }, 1000);
 
     }
 

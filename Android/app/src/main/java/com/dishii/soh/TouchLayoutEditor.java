@@ -54,6 +54,16 @@ public class TouchLayoutEditor {
     private final List<Control> controls = new ArrayList<>();
 
     private boolean editing = false;
+    private boolean ocarinaBoost = false;
+    private static final float OCARINA_SCALE = 1.5f;
+
+    /** Enlarges the note buttons (A and the C buttons) while the ocarina is being played. */
+    public void setOcarinaBoost(boolean on) {
+        if (on != ocarinaBoost) {
+            ocarinaBoost = on;
+            apply();
+        }
+    }
     private Control selected = null;
     private FrameLayout editLayer;
     private TextView selectedLabel;
@@ -170,8 +180,20 @@ public class TouchLayoutEditor {
             float dx = getF(c.key + ".dx", 0f);
             float dy = getF(c.key + ".dy", 0f);
             float scale = getF(c.key + ".scale", 1f);
+            if (ocarinaBoost && !editing && (c.key.equals("c") || c.key.equals("a"))) {
+                scale *= OCARINA_SCALE;
+            }
             boolean hidden = isHidden(c);
+            // Controls made of several views (the C buttons) scale around the first view's center,
+            // so the group grows as a whole instead of every button growing in place
+            View first = c.views[0];
+            float cx = first.getLeft() + first.getWidth() / 2f;
+            float cy = first.getTop() + first.getHeight() / 2f;
             for (View v : c.views) {
+                if (c.views.length > 1 && v.getWidth() > 0) {
+                    v.setPivotX(cx - v.getLeft());
+                    v.setPivotY(cy - v.getTop());
+                }
                 v.setTranslationX(dx);
                 v.setTranslationY(dy);
                 v.setScaleX(scale);
