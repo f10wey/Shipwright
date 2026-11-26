@@ -3583,6 +3583,15 @@ Actor* func_80032AF0(PlayState* play, ActorContext* actorCtx, Actor** actorPtr, 
 
         actorCtx->targetCtx.bgmEnemy = NULL;
         D_8015BBFC = player->actor.shape.rot.y;
+        // Pick lock-on targets from what the camera looks at, not only from what Link faces,
+        // so a freely rotated camera can aim the lock-on.
+#ifdef __ANDROID__
+        if (CVarGetInteger(CVAR_ENHANCEMENT("TargetInCameraView"), 1)) {
+#else
+        if (CVarGetInteger(CVAR_ENHANCEMENT("TargetInCameraView"), 0)) {
+#endif
+            D_8015BBFC = Camera_GetCamDirYaw(GET_ACTIVE_CAM(play));
+        }
 
         for (i = 0; i < 3; i++) {
             func_800328D4(play, actorCtx, player, *entry);

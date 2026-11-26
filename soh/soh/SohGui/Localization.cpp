@@ -413,6 +413,8 @@ static const std::unordered_map<std::string, const char*> sRussian = {
     { "Preload Scene Assets", "Подгружать локацию заранее" },
     { "Skip Off-Screen Scenery", "Не рисовать то, что за экраном" },
     { "Attack Towards Camera", "Удар в сторону камеры" },
+    { "Lock On Where The Camera Looks", "Прицел туда, куда смотрит камера" },
+    { "Z-Targeting picks enemies and objects in front of the camera instead of in front of Link.", "Z-прицеливание выбирает врагов и объекты перед камерой, а не перед Линком." },
     { "When you swing the sword while standing still, Link turns to where the camera is looking first.", "Если ударить мечом стоя на месте, Линк сначала разворачивается туда, куда смотрит камера." },
     { "Does not draw parts of big areas (like Hyrule Field) that are outside the screen. Saves a lot of processor time on phones. Turn off if pieces of the scenery pop in at the screen edges.", "Не рисует части больших локаций (например, Хайрульского поля), которые находятся за краями экрана. Сильно разгружает процессор на телефоне. Выключите, если по краям экрана появляются куски декораций." },
     { "Loads the textures and models of the whole area in the background as soon as you enter it, so HD texture packs "

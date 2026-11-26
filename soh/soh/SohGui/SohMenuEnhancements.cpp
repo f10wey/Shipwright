@@ -449,6 +449,15 @@ void SohMenu::AddMenuEnhancements() {
         .Options(CheckboxOptions().DefaultValue(false).Tooltip(
             "Loads the textures and models of the whole area in the background as soon as you enter it, so "
             "HD texture packs stutter less right after a loading screen. Uses more memory."));
+    AddWidget(path, "Lock On Where The Camera Looks", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("TargetInCameraView"))
+        .RaceDisable(false)
+#ifdef __ANDROID__
+        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+#else
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
+#endif
+            "Z-Targeting picks enemies and objects in front of the camera instead of in front of Link."));
     AddWidget(path, "Attack Towards Camera", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("AttackTowardsCamera"))
         .RaceDisable(false)
