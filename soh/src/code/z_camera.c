@@ -46,6 +46,13 @@ float touchCameraPitch=0;
 float touchAimAccumX = 0;
 float touchAimAccumY = 0;
 
+// Touch jump button (X): set while the finger is on it
+volatile int touchJumpHeld = 0;
+
+extern void JNICALL Java_com_dishii_soh_MainActivity_setJumpHeld(JNIEnv* env, jobject jobj, jboolean held) {
+    touchJumpHeld = held ? 1 : 0;
+}
+
 extern void JNICALL Java_com_dishii_soh_MainActivity_setCameraState(JNIEnv *env, jobject jobj, jint axis, jfloat value) {
     switch(axis){
         case 0:

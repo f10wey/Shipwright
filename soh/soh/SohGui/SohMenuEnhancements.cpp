@@ -449,6 +449,17 @@ void SohMenu::AddMenuEnhancements() {
         .Options(CheckboxOptions().DefaultValue(false).Tooltip(
             "Loads the textures and models of the whole area in the background as soon as you enter it, so "
             "HD texture packs stutter less right after a loading screen. Uses more memory."));
+    AddWidget(path, "Jump Button", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("JumpButton"))
+        .RaceDisable(false)
+        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+            "The on-screen X button makes Link jump."));
+    AddWidget(path, "No Automatic Jumps", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("NoAutoJump"))
+        .RaceDisable(false)
+        .Options(CheckboxOptions().Tooltip(
+            "Link no longer jumps by himself when running off a ledge; use the jump button instead. "
+            "Some gaps can only be crossed by jumping."));
     AddWidget(path, "Lock On Where The Camera Looks", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("TargetInCameraView"))
         .RaceDisable(false)

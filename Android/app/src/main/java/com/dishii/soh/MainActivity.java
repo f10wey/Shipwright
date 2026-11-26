@@ -457,6 +457,7 @@ public class MainActivity extends SDLActivity{
     public native void detachController();
     // Native method for setting button state
     public native void setButton(int button, boolean value);
+    public native void setJumpHeld(boolean held);
     public native void setCameraState(int axis, float value);
 
     // Native method for setting joystick axis value
@@ -546,9 +547,9 @@ public class MainActivity extends SDLActivity{
         touchEditor.addControl("stick", "Стик", false, leftJoystick);
         touchEditor.addControl("a", "A", false, buttonA);
         touchEditor.addControl("b", "B", false, buttonB);
-        // X/Y duplicate C-right/C-left in the default mapping, so they start hidden
-        touchEditor.addControl("x", "X (C-вправо)", true, buttonX);
-        touchEditor.addControl("y", "Y (C-влево)", true, buttonY);
+        // X is the jump button; Y has no default use, so it starts hidden
+        touchEditor.addControl("x", "Прыжок", false, buttonX);
+        touchEditor.addControl("y", "Y", true, buttonY);
         touchEditor.addControl("c", "C-кнопки", false,
                 overlayView.findViewById(R.id.imageView), buttonDpadUp, buttonDpadDown, buttonDpadLeft, buttonDpadRight);
         touchEditor.addControl("l", "L", false, buttonLB);
@@ -608,14 +609,18 @@ public class MainActivity extends SDLActivity{
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         setButton(buttonNum, true);
+                        if (buttonNum == ControllerButtons.BUTTON_X) setJumpHeld(true);
                         button.setPressed(true);
                         return true;
                     case MotionEvent.ACTION_UP:
                         setButton(buttonNum, false);
+                        if (buttonNum == ControllerButtons.BUTTON_X) setJumpHeld(false);
                         button.setPressed(false);
                         return true;
                     case MotionEvent.ACTION_CANCEL:
                         setButton(buttonNum, false);
+                        if (buttonNum == ControllerButtons.BUTTON_X) setJumpHeld(false);
+                        button.setPressed(false);
                         return true;
                 }
                 return false;

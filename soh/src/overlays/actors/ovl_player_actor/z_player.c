@@ -5818,8 +5818,10 @@ void func_8083AA10(Player* this, PlayState* play) {
                         }
                     }
 
-                    func_8083A4A8(this, play);
-                    return;
+                    if (!CVarGetInteger(CVAR_ENHANCEMENT("NoAutoJump"), 0)) {
+                        func_8083A4A8(this, play);
+                        return;
+                    }
                 }
 
                 if ((sPrevFloorProperty == 9) || (sYDistToFloor <= this->ageProperties->unk_34) ||
@@ -11966,6 +11968,43 @@ static f32 sWaterConveyorSpeeds[] = { 2.0f, 4.0f, 7.0f };
 static f32 sFloorConveyorSpeeds[] = { 0.5f, 1.0f, 3.0f };
 
 #ifdef __ANDROID__
+extern volatile int touchJumpHeld;
+#endif
+
+// Jump on the touch X button, using the same jump the game does when running off a ledge.
+static void Player_ManualJump(PlayState* play, Player* this) {
+    static int sJumpWasHeld = 0;
+#ifdef __ANDROID__
+    int held = touchJumpHeld;
+#else
+    int held = 0;
+#endif
+    int pressed = held && !sJumpWasHeld;
+    sJumpWasHeld = held;
+    if (!pressed || !CVarGetInteger(CVAR_ENHANCEMENT("JumpButton"), 1)) {
+        return;
+    }
+    if (!(this->actor.bgCheckFlags & 1) || this->meleeWeaponState != 0 || Player_InCsMode(play)) {
+        return;
+    }
+    if (this->stateFlags1 &
+        (PLAYER_STATE1_LOADING | PLAYER_STATE1_INPUT_DISABLED | PLAYER_STATE1_TALKING | PLAYER_STATE1_DEAD |
+         PLAYER_STATE1_GETTING_ITEM | PLAYER_STATE1_CHARGING_SPIN_ATTACK | PLAYER_STATE1_HANGING_OFF_LEDGE |
+         PLAYER_STATE1_CLIMBING_LEDGE | PLAYER_STATE1_JUMPING | PLAYER_STATE1_FREEFALL | PLAYER_STATE1_FIRST_PERSON |
+         PLAYER_STATE1_CLIMBING_LADDER | PLAYER_STATE1_ON_HORSE | PLAYER_STATE1_DAMAGED | PLAYER_STATE1_IN_WATER |
+         PLAYER_STATE1_IN_ITEM_CS | PLAYER_STATE1_IN_CUTSCENE | PLAYER_STATE1_SHIELDING | PLAYER_STATE1_READY_TO_FIRE)) {
+        return;
+    }
+    // Not while pushing/pulling blocks, crawling, grabbing, etc.
+    if (this->stateFlags2 & (PLAYER_STATE2_MOVING_DYNAPOLY | PLAYER_STATE2_CRAWLING | PLAYER_STATE2_GRABBING_DYNAPOLY |
+                             PLAYER_STATE2_GRABBED_BY_ENEMY | PLAYER_STATE2_FROZEN | PLAYER_STATE2_OCARINA_PLAYING |
+                             PLAYER_STATE2_HOPPING)) {
+        return;
+    }
+    func_8083A4A8(this, play);
+}
+
+#ifdef __ANDROID__
 #define ATTACK_TOWARDS_CAMERA_DEFAULT 1
 #else
 #define ATTACK_TOWARDS_CAMERA_DEFAULT 0
@@ -12309,6 +12348,7 @@ void Player_UpdateCommon(Player* this, PlayState* play, Input* input) {
         sSavedCurrentMask = this->currentMask;
 
         Player_FaceCameraOnAttack(play, this);
+        Player_ManualJump(play, this);
 
         if (GameInteractor_Should(VB_EXECUTE_PLAYER_ACTION_FUNC, !(this->stateFlags3 & PLAYER_STATE3_PAUSE_ACTION_FUNC),
                                   this, input)) {

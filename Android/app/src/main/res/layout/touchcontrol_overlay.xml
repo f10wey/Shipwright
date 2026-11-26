@@ -130,7 +130,7 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:background="@drawable/ic_button"
-        android:text="X"
+        android:text="↑"
         app:layout_constraintBottom_toTopOf="@id/buttonA"
         app:layout_constraintEnd_toStartOf="@id/buttonA"
         android:textColor="#FFFFFFFF"/>
