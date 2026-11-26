@@ -189,6 +189,18 @@ public class TouchLayoutEditor {
             View first = c.views[0];
             float cx = first.getLeft() + first.getWidth() / 2f;
             float cy = first.getTop() + first.getHeight() / 2f;
+            // While the ocarina is out, move the note buttons to the middle of the screen:
+            // the C cross left of center and A right of it, like an ocarina keypad
+            boolean ocarinaKey = ocarinaBoost && !editing && (c.key.equals("c") || c.key.equals("a"));
+            if (ocarinaKey && first.getParent() instanceof View) {
+                View parent = (View) first.getParent();
+                float w = parent.getWidth();
+                float h = parent.getHeight();
+                float targetX = c.key.equals("c") ? w * 0.40f : w * 0.62f;
+                float targetY = h * 0.58f;
+                dx = targetX - cx;
+                dy = targetY - cy;
+            }
             for (View v : c.views) {
                 if (c.views.length > 1 && v.getWidth() > 0) {
                     v.setPivotX(cx - v.getLeft());
