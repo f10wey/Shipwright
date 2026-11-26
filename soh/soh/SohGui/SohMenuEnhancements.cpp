@@ -449,6 +449,15 @@ void SohMenu::AddMenuEnhancements() {
         .Options(CheckboxOptions().DefaultValue(false).Tooltip(
             "Loads the textures and models of the whole area in the background as soon as you enter it, so "
             "HD texture packs stutter less right after a loading screen. Uses more memory."));
+    AddWidget(path, "Attack Towards Camera", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("AttackTowardsCamera"))
+        .RaceDisable(false)
+#ifdef __ANDROID__
+        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+#else
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
+#endif
+            "When you swing the sword while standing still, Link turns to where the camera is looking first."));
     AddWidget(path, "Skip Off-Screen Scenery", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("CullOffscreenRoomParts"))
         .RaceDisable(false)

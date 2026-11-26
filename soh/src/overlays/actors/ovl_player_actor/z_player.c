@@ -11965,6 +11965,46 @@ static Vec3f D_80854814 = { 0.0f, 0.0f, 200.0f };
 static f32 sWaterConveyorSpeeds[] = { 2.0f, 4.0f, 7.0f };
 static f32 sFloorConveyorSpeeds[] = { 0.5f, 1.0f, 3.0f };
 
+#ifdef __ANDROID__
+#define ATTACK_TOWARDS_CAMERA_DEFAULT 1
+#else
+#define ATTACK_TOWARDS_CAMERA_DEFAULT 0
+#endif
+
+// With a free camera, swinging the sword while standing still turns Link to where the camera
+// looks instead of swinging in whatever direction he happened to be facing.
+static void Player_FaceCameraOnAttack(PlayState* play, Player* this) {
+    if (!CVarGetInteger(CVAR_ENHANCEMENT("AttackTowardsCamera"), ATTACK_TOWARDS_CAMERA_DEFAULT)) {
+        return;
+    }
+    if (sControlInput == NULL || !CHECK_BTN_ALL(sControlInput->press.button, BTN_B)) {
+        return;
+    }
+    // Moving with the stick already decides the direction
+    if (sControlStickMagnitude > 5.0f) {
+        return;
+    }
+    u8 bItem = gSaveContext.equips.buttonItems[0];
+    if (!((bItem >= ITEM_SWORD_KOKIRI && bItem <= ITEM_SWORD_BGS) || bItem == ITEM_STICK)) {
+        return;
+    }
+    if (this->stateFlags1 &
+        (PLAYER_STATE1_LOADING | PLAYER_STATE1_HOSTILE_LOCK_ON | PLAYER_STATE1_INPUT_DISABLED | PLAYER_STATE1_TALKING |
+         PLAYER_STATE1_DEAD | PLAYER_STATE1_GETTING_ITEM | PLAYER_STATE1_CARRYING_ACTOR |
+         PLAYER_STATE1_CHARGING_SPIN_ATTACK | PLAYER_STATE1_HANGING_OFF_LEDGE | PLAYER_STATE1_CLIMBING_LEDGE |
+         PLAYER_STATE1_Z_TARGETING | PLAYER_STATE1_FRIENDLY_ACTOR_FOCUS | PLAYER_STATE1_PARALLEL |
+         PLAYER_STATE1_JUMPING | PLAYER_STATE1_FREEFALL | PLAYER_STATE1_FIRST_PERSON | PLAYER_STATE1_CLIMBING_LADDER |
+         PLAYER_STATE1_SHIELDING | PLAYER_STATE1_ON_HORSE | PLAYER_STATE1_DAMAGED | PLAYER_STATE1_IN_WATER |
+         PLAYER_STATE1_IN_ITEM_CS | PLAYER_STATE1_IN_CUTSCENE)) {
+        return;
+    }
+    if (!(this->actor.bgCheckFlags & 1)) {
+        return;
+    }
+    s16 yaw = Camera_GetCamDirYaw(GET_ACTIVE_CAM(play));
+    this->actor.shape.rot.y = this->actor.world.rot.y = this->yaw = yaw;
+}
+
 void Player_UpdateCommon(Player* this, PlayState* play, Input* input) {
     s32 pad;
 
@@ -12267,6 +12307,8 @@ void Player_UpdateCommon(Player* this, PlayState* play, Input* input) {
         sInvWaterSpeedFactor = 1.0f / sWaterSpeedFactor;
         sUseHeldItem = sHeldItemButtonIsHeldDown = 0;
         sSavedCurrentMask = this->currentMask;
+
+        Player_FaceCameraOnAttack(play, this);
 
         if (GameInteractor_Should(VB_EXECUTE_PLAYER_ACTION_FUNC, !(this->stateFlags3 & PLAYER_STATE3_PAUSE_ACTION_FUNC),
                                   this, input)) {
