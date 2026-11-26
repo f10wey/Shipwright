@@ -11974,6 +11974,8 @@ extern volatile int touchJumpHeld;
 // Jump on the touch X button, using the same jump the game does when running off a ledge.
 static void Player_ManualJump(PlayState* play, Player* this) {
     static int sJumpWasHeld = 0;
+    // Short cooldown after a standing jump, counted while Link is back on the ground
+    static int sStandingJumpCooldown = 0;
 #ifdef __ANDROID__
     int held = touchJumpHeld;
 #else
@@ -11981,10 +11983,17 @@ static void Player_ManualJump(PlayState* play, Player* this) {
 #endif
     int pressed = held && !sJumpWasHeld;
     sJumpWasHeld = held;
+    if (sStandingJumpCooldown > 0 && (this->actor.bgCheckFlags & 1)) {
+        sStandingJumpCooldown--;
+    }
     if (!pressed || !CVarGetInteger(CVAR_ENHANCEMENT("JumpButton"), 1)) {
         return;
     }
     if (!(this->actor.bgCheckFlags & 1) || this->meleeWeaponState != 0 || Player_InCsMode(play)) {
+        return;
+    }
+    // Animation-driven moves (finishing a ledge climb, rolling, ...) must play out first
+    if (this->skelAnime.moveFlags != 0 || this->actionFunc == Player_Action_8084411C) {
         return;
     }
     if (this->stateFlags1 &
@@ -12001,7 +12010,24 @@ static void Player_ManualJump(PlayState* play, Player* this) {
                              PLAYER_STATE2_HOPPING)) {
         return;
     }
-    func_8083A4A8(this, play);
+    if (this->linearVelocity > (IREG(66) / 100.0f)) {
+        // Running: the game's own running jump
+        func_8083A4A8(this, play);
+        return;
+    }
+    if (sStandingJumpCooldown > 0) {
+        return;
+    }
+    // Standing or walking: the vanilla hop is tiny, so jump at least ~30% as high as a running jump
+    // (height grows with the square of the take-off speed, sqrt(0.3) ~= 0.55)
+    f32 vel = (IREG(68) / 100.0f) + ((IREG(69) * this->linearVelocity) / 1000.0f);
+    f32 minVel = (IREG(67) / 100.0f) * 0.55f;
+    if (vel < minVel) {
+        vel = minVel;
+    }
+    func_80838940(this, &gPlayerAnim_link_normal_jump, vel, play, NA_SE_VO_LI_AUTO_JUMP);
+    this->av2.actionVar2 = 1;
+    sStandingJumpCooldown = 8;
 }
 
 #ifdef __ANDROID__
