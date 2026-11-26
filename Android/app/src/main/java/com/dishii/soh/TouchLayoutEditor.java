@@ -65,6 +65,81 @@ public class TouchLayoutEditor {
         this.overlayRoot = overlayRoot;
         this.buttonGroup = buttonGroup;
         this.prefs = prefs;
+        importFromFileIfEmpty();
+    }
+
+    // ---------------------------------------------------------------- layout file
+    // SharedPreferences are wiped when the app is uninstalled, so the layout is also kept in
+    // SOH/touch_layout.txt next to the saves and restored from there after a reinstall.
+
+    private static java.io.File layoutFile() {
+        return new java.io.File(new java.io.File(android.os.Environment.getExternalStorageDirectory(), "SOH"),
+                "touch_layout.txt");
+    }
+
+    private void importFromFileIfEmpty() {
+        java.io.File f = layoutFile();
+        for (String k : prefs.getAll().keySet()) {
+            if (k.startsWith(PREFIX)) {
+                // Layout from before this version: put it in the file so it survives reinstalls
+                if (!f.exists()) {
+                    exportToFile();
+                }
+                return;
+            }
+        }
+        if (!f.exists()) {
+            return;
+        }
+        try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.FileReader(f))) {
+            SharedPreferences.Editor ed = prefs.edit();
+            String line;
+            while ((line = r.readLine()) != null) {
+                // key=f:1.5 or key=b:true
+                int eq = line.indexOf('=');
+                if (eq <= 0 || line.length() < eq + 3) {
+                    continue;
+                }
+                String key = line.substring(0, eq);
+                String type = line.substring(eq + 1, eq + 2);
+                String value = line.substring(eq + 3);
+                if (!key.startsWith(PREFIX)) {
+                    continue;
+                }
+                if (type.equals("f")) {
+                    ed.putFloat(key, Float.parseFloat(value));
+                } else if (type.equals("b")) {
+                    ed.putBoolean(key, Boolean.parseBoolean(value));
+                }
+            }
+            ed.apply();
+        } catch (Exception e) {
+            android.util.Log.w("TouchLayout", "Cannot read " + f, e);
+        }
+    }
+
+    private void exportToFile() {
+        StringBuilder sb = new StringBuilder();
+        for (java.util.Map.Entry<String, ?> e : prefs.getAll().entrySet()) {
+            if (!e.getKey().startsWith(PREFIX)) {
+                continue;
+            }
+            Object v = e.getValue();
+            if (v instanceof Float) {
+                sb.append(e.getKey()).append("=f:").append(v).append('\n');
+            } else if (v instanceof Boolean) {
+                sb.append(e.getKey()).append("=b:").append(v).append('\n');
+            }
+        }
+        java.io.File f = layoutFile();
+        try {
+            f.getParentFile().mkdirs();
+            try (java.io.FileWriter w = new java.io.FileWriter(f)) {
+                w.write(sb.toString());
+            }
+        } catch (Exception e) {
+            android.util.Log.w("TouchLayout", "Cannot write " + f, e);
+        }
     }
 
     public void addControl(String key, String title, boolean hiddenByDefault, View... views) {
@@ -87,6 +162,9 @@ public class TouchLayoutEditor {
 
     /** Applies the saved positions, sizes, visibility and opacity to the views. */
     public void apply() {
+        if (editing) {
+            exportToFile();
+        }
         float alpha = opacity();
         for (Control c : controls) {
             float dx = getF(c.key + ".dx", 0f);
@@ -136,6 +214,7 @@ public class TouchLayoutEditor {
             return;
         }
         editing = false;
+        exportToFile();
         overlayRoot.removeView(editLayer);
         editLayer = null;
         selected = null;
