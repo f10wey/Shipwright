@@ -449,6 +449,16 @@ void SohMenu::AddMenuEnhancements() {
         .Options(CheckboxOptions().DefaultValue(false).Tooltip(
             "Loads the textures and models of the whole area in the background as soon as you enter it, so "
             "HD texture packs stutter less right after a loading screen. Uses more memory."));
+    AddWidget(path, "Ledge Stick Directions", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("LedgeStickDirections"))
+        .RaceDisable(false)
+#ifdef __ANDROID__
+        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+#else
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
+#endif
+            "While hanging from a ledge: push towards the wall to climb up, away from it to let go. "
+            "Sideways does nothing."));
     AddWidget(path, "Jump Button", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("JumpButton"))
         .RaceDisable(false)

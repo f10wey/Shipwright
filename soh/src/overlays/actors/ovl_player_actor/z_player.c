@@ -13466,7 +13466,24 @@ void Player_Action_8084BBE4(Player* this, PlayState* play) {
 
     if (this->av1.actionVar1 != 0) {
         Player_GetMovementSpeedAndYaw(this, &sp3C, &sp3A, SPEED_MODE_LINEAR, play);
-        if (this->controlStickSpinAngles[this->controlStickDataIndex] >= 0) {
+        s8 stickDir = this->controlStickSpinAngles[this->controlStickDataIndex];
+        // Vanilla climbs back up for any stick direction. Optionally: towards the wall climbs,
+        // away from it lets go, sideways does nothing.
+#ifdef __ANDROID__
+        s32 ledgeStick = CVarGetInteger(CVAR_ENHANCEMENT("LedgeStickDirections"), 1);
+#else
+        s32 ledgeStick = CVarGetInteger(CVAR_ENHANCEMENT("LedgeStickDirections"), 0);
+#endif
+        s32 dropWithStick = false;
+        if (ledgeStick && stickDir >= 0) {
+            if (stickDir == 2) {
+                dropWithStick = true;
+            }
+            if (stickDir != 0) {
+                stickDir = -1;
+            }
+        }
+        if (stickDir >= 0) {
             if (this->av1.actionVar1 > 0) {
                 anim = GET_PLAYER_ANIM(PLAYER_ANIMGROUP_fall_up, this->modelAnimType);
             } else {
@@ -13476,7 +13493,8 @@ void Player_Action_8084BBE4(Player* this, PlayState* play) {
             return;
         }
 
-        if (CHECK_BTN_ALL(sControlInput->cur.button, BTN_A) || (this->actor.shape.feetFloorFlags != 0)) {
+        if (CHECK_BTN_ALL(sControlInput->cur.button, BTN_A) || dropWithStick ||
+            (this->actor.shape.feetFloorFlags != 0)) {
             func_80837B60(this);
             if (this->av1.actionVar1 < 0) {
                 this->linearVelocity = -0.8f;

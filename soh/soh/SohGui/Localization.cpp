@@ -416,6 +416,8 @@ static const std::unordered_map<std::string, const char*> sRussian = {
     { "Draw Distance For NPCs Only", "Дальность только для NPC и построек" },
     { "Only NPCs and buildings get the longer draw distance. Enemies, bushes and other objects keep the original range, which avoids most of the slowdown.", "Увеличенная дальность действует только на NPC и постройки. Враги, кусты и прочие объекты остаются с оригинальной дальностью — так почти нет лагов." },
     { "Jump Button", "Кнопка прыжка" },
+    { "Ledge Stick Directions", "Уступ: стик к стене — вверх, от стены — спрыгнуть" },
+    { "While hanging from a ledge: push towards the wall to climb up, away from it to let go. Sideways does nothing.", "Когда Линк висит на уступе: стик к стене — забраться наверх, от стены — отпустить руки. В стороны — ничего не происходит." },
     { "The on-screen X button makes Link jump.", "Экранная кнопка X — прыжок." },
     { "No Automatic Jumps", "Без автопрыжка" },
     { "Link no longer jumps by himself when running off a ledge; use the jump button instead. Some gaps can only be crossed by jumping.", "Линк больше не прыгает сам, когда сбегает с края, — прыгайте кнопкой. Через некоторые пропасти можно перебраться только прыжком." },
