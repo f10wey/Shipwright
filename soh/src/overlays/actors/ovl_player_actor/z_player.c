@@ -13467,7 +13467,7 @@ void Player_Action_8084BBE4(Player* this, PlayState* play) {
     if (this->av1.actionVar1 != 0) {
         Player_GetMovementSpeedAndYaw(this, &sp3C, &sp3A, SPEED_MODE_LINEAR, play);
         s8 stickDir = this->controlStickSpinAngles[this->controlStickDataIndex];
-        // Direction relative to Link, who faces the wall while hanging
+        // Direction relative to Link's yaw
         s8 relDir = this->controlStickDirections[this->controlStickDataIndex];
         // Vanilla climbs back up for any stick direction. Optionally: towards the wall climbs,
         // away from it lets go, sideways does nothing.
@@ -13478,10 +13478,11 @@ void Player_Action_8084BBE4(Player* this, PlayState* play) {
 #endif
         s32 dropWithStick = false;
         if (ledgeStick && stickDir >= 0) {
-            if (relDir == PLAYER_STICK_DIR_BACKWARD) {
+            // While hanging, Link's yaw points away from the wall, so "backward" is towards it
+            if (relDir == PLAYER_STICK_DIR_FORWARD) {
                 dropWithStick = true;
             }
-            if (relDir != PLAYER_STICK_DIR_FORWARD) {
+            if (relDir != PLAYER_STICK_DIR_BACKWARD) {
                 stickDir = -1;
             }
         }
