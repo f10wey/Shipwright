@@ -2943,6 +2943,13 @@ s32 func_800314D4(PlayState* play, Actor* actor, Vec3f* arg2, f32 arg3) {
 
 // #region SOH [Enhancements] Allows us to increase the draw and update distance independently,
 // mostly a modified version of the function above and additional tweaks for some specfic actors
+// Phones are much wider than 4:3, so actors at the screen edges would vanish without this
+#ifdef __ANDROID__
+#define WIDESCREEN_CULLING_DEFAULT 1
+#else
+#define WIDESCREEN_CULLING_DEFAULT 0
+#endif
+
 s32 Ship_CalcShouldDrawAndUpdate(PlayState* play, Actor* actor, Vec3f* projectedPos, f32 projectedW, bool* shouldDraw,
                                  bool* shouldUpdate) {
     f32 clampedProjectedW;
@@ -2962,6 +2969,17 @@ s32 Ship_CalcShouldDrawAndUpdate(PlayState* play, Actor* actor, Vec3f* projected
     s32 multiplier = CVarGetInteger(CVAR_ENHANCEMENT("DisableDrawDistance"), 1);
     multiplier = MAX(multiplier, 1);
 
+    // Updating every far-away enemy, bush and prop is what makes a longer draw distance lag on phones.
+    // Optionally keep the longer distance for NPCs and buildings only; everything else uses the vanilla range.
+#ifdef __ANDROID__
+    if (CVarGetInteger(CVAR_ENHANCEMENT("ExtendedDrawNpcOnly"), 1) &&
+#else
+    if (CVarGetInteger(CVAR_ENHANCEMENT("ExtendedDrawNpcOnly"), 0) &&
+#endif
+        actor->category != ACTORCAT_NPC && actor->category != ACTORCAT_BG) {
+        multiplier = 1;
+    }
+
     // Some actors have a really short forward value, so we need to add to it before the multiplier to increase the
     // final strength of the forward culling
     f32 adder = (actor->uncullZoneForward < 500) ? 1000.0f : 0.0f;
@@ -2972,7 +2990,7 @@ s32 Ship_CalcShouldDrawAndUpdate(PlayState* play, Actor* actor, Vec3f* projected
 
         f32 ratioAdjusted = 1.0f;
 
-        if (CVarGetInteger(CVAR_ENHANCEMENT("WidescreenActorCulling"), 0)) {
+        if (CVarGetInteger(CVAR_ENHANCEMENT("WidescreenActorCulling"), WIDESCREEN_CULLING_DEFAULT)) {
             f32 originalAspectRatio = 4.0f / 3.0f;
             f32 currentAspectRatio = OTRGetAspectRatio();
             ratioAdjusted = MAX(currentAspectRatio / originalAspectRatio, 1.0f);
@@ -3055,7 +3073,7 @@ void func_800315AC(PlayState* play, ActorContext* actorCtx) {
             bool shipShouldUpdate = false;
             if ((HREG(64) != 1) || ((HREG(65) != -1) && (HREG(65) != HREG(66))) || (HREG(70) == 0)) {
                 if (CVarGetInteger(CVAR_ENHANCEMENT("DisableDrawDistance"), 1) > 1 ||
-                    CVarGetInteger(CVAR_ENHANCEMENT("WidescreenActorCulling"), 0)) {
+                    CVarGetInteger(CVAR_ENHANCEMENT("WidescreenActorCulling"), WIDESCREEN_CULLING_DEFAULT)) {
                     Ship_CalcShouldDrawAndUpdate(play, actor, &actor->projectedPos, actor->projectedW, &shipShouldDraw,
                                                  &shipShouldUpdate);
 

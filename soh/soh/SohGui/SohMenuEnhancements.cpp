@@ -637,6 +637,18 @@ void SohMenu::AddMenuEnhancements() {
         })
         .Options(IntSliderOptions().Min(1).Max(5).DefaultValue(1).Format("%dx").Tooltip(
             "Increases the range in which Actors/Objects are drawn."));
+    AddWidget(path, "Draw Distance For NPCs Only", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("ExtendedDrawNpcOnly"))
+        .RaceDisable(false)
+        .PreFunc(
+            [](WidgetInfo& info) { info.isHidden = CVarGetInteger(CVAR_ENHANCEMENT("DisableDrawDistance"), 1) <= 1; })
+#ifdef __ANDROID__
+        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+#else
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
+#endif
+            "Only NPCs and buildings get the longer draw distance. Enemies, bushes and other objects keep the "
+            "original range, which avoids most of the slowdown."));
     AddWidget(path, "Kokiri Draw Distance", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("DisableKokiriDrawDistance"))
         .RaceDisable(false)
@@ -648,7 +660,11 @@ void SohMenu::AddMenuEnhancements() {
     AddWidget(path, "Widescreen Actor Culling", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("WidescreenActorCulling"))
         .Options(
-            CheckboxOptions().Tooltip("Adjusts the Horizontal Culling Plane to account for Widescreen Resolutions."));
+#ifdef __ANDROID__
+            CheckboxOptions().DefaultValue(true).Tooltip(
+#else
+            CheckboxOptions().Tooltip(
+#endif"Adjusts the Horizontal Culling Plane to account for Widescreen Resolutions."));
     AddWidget(path, "Cull Glitch Useful Actors", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("ExtendedCullingExcludeGlitchActors"))
         .PreFunc([](WidgetInfo& info) {

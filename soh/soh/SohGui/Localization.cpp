@@ -413,6 +413,8 @@ static const std::unordered_map<std::string, const char*> sRussian = {
     { "Preload Scene Assets", "Подгружать локацию заранее" },
     { "Skip Off-Screen Scenery", "Не рисовать то, что за экраном" },
     { "Attack Towards Camera", "Удар в сторону камеры" },
+    { "Draw Distance For NPCs Only", "Дальность только для NPC и построек" },
+    { "Only NPCs and buildings get the longer draw distance. Enemies, bushes and other objects keep the original range, which avoids most of the slowdown.", "Увеличенная дальность действует только на NPC и постройки. Враги, кусты и прочие объекты остаются с оригинальной дальностью — так почти нет лагов." },
     { "Jump Button", "Кнопка прыжка" },
     { "The on-screen X button makes Link jump.", "Экранная кнопка X — прыжок." },
     { "No Automatic Jumps", "Без автопрыжка" },
