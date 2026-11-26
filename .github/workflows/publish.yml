@@ -12,14 +12,14 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          run-id: 45799699239
+          run-id: 45806257338
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: android
       - name: Package
-        run: cp android/*.apk soh-android-ru-v11.apk
+        run: cp android/*.apk soh-android-ru-v12.apk
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ru-builds
           name: Russian menu builds
           prerelease: true
-          files: soh-android-ru-v11.apk
+          files: soh-android-ru-v12.apk
