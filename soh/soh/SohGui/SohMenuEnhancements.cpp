@@ -449,6 +449,16 @@ void SohMenu::AddMenuEnhancements() {
         .Options(CheckboxOptions().DefaultValue(false).Tooltip(
             "Loads the textures and models of the whole area in the background as soon as you enter it, so "
             "HD texture packs stutter less right after a loading screen. Uses more memory."));
+    AddWidget(path, "Skip Off-Screen Scenery", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("CullOffscreenRoomParts"))
+        .RaceDisable(false)
+#ifdef __ANDROID__
+        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+#else
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
+#endif
+            "Does not draw parts of big areas (like Hyrule Field) that are outside the screen. "
+            "Saves a lot of processor time on phones. Turn off if pieces of the scenery pop in at the screen edges."));
     AddWidget(path, "Disable Bomb Billboarding", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("DisableBombBillboarding"))
         .RaceDisable(false)

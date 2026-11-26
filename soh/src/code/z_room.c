@@ -7,6 +7,7 @@
 #include "soh/Enhancements/game-interactor/GameInteractor.h"
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #include "public/bridge/gfxbridge.h"
 #include "soh/OTRGlobals.h"
@@ -94,6 +95,48 @@ typedef struct struct_80095D04 {
 } struct_80095D04; // size = 0x10
 
 // Room Draw Polygon Type 2
+#ifdef __ANDROID__
+#define CULL_ROOM_PARTS_DEFAULT 1
+#else
+#define CULL_ROOM_PARTS_DEFAULT 0
+#endif
+
+// The original game only skips room pieces that are behind the camera or past the fog.
+// Fast3D transforms every vertex on the CPU, so on phones it pays off to also skip pieces
+// that are fully to the left/right/above/below the screen (bounding sphere vs. side planes).
+static s32 Room_PartOnScreen(MtxF* m, Vec3f* pos, Vec3f* clip, f32 w, f32 radius) {
+    if (!CVarGetInteger(CVAR_ENHANCEMENT("CullOffscreenRoomParts"), CULL_ROOM_PARTS_DEFAULT)) {
+        return true;
+    }
+    // The game's projection is 4:3; widescreen shows more to the sides, so widen those planes.
+    f32 kx = OTRGetAspectRatio() / (4.0f / 3.0f);
+    if (kx < 1.0f) {
+        kx = 1.0f;
+    }
+    kx *= 1.15f;
+    const f32 ky = 1.15f;
+    for (s32 i = 0; i < 4; i++) {
+        f32 k = (i < 2) ? kx : ky;
+        f32 s = (i & 1) ? -1.0f : 1.0f;
+        f32 ax, ay, az, d;
+        if (i < 2) {
+            ax = k * m->wx + s * m->xx;
+            ay = k * m->wy + s * m->xy;
+            az = k * m->wz + s * m->xz;
+            d = k * w + s * clip->x;
+        } else {
+            ax = k * m->wx + s * m->yx;
+            ay = k * m->wy + s * m->yy;
+            az = k * m->wz + s * m->yz;
+            d = k * w + s * clip->y;
+        }
+        if (d < -radius * sqrtf(ax * ax + ay * ay + az * az)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void func_80095D04(PlayState* play, Room* room, u32 flags) {
     PolygonType2* polygon2;
     PolygonDlist2* polygonDlist;
@@ -139,7 +182,8 @@ void func_80095D04(PlayState* play, Room* room, u32 flags) {
         sp90.y = polygonDlist->pos.y;
         sp90.z = polygonDlist->pos.z;
         SkinMatrix_Vec3fMtxFMultXYZW(&play->viewProjectionMtxF, &sp90, &sp84, &sp80);
-        if (-(f32)polygonDlist->unk_06 < sp84.z) {
+        if (-(f32)polygonDlist->unk_06 < sp84.z &&
+            Room_PartOnScreen(&play->viewProjectionMtxF, &sp90, &sp84, sp80, polygonDlist->unk_06)) {
             temp_f2 = sp84.z - polygonDlist->unk_06;
             if (temp_f2 < play->lightCtx.fogFar) {
                 phi_v0 = spB4;
