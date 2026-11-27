@@ -13478,11 +13478,14 @@ void Player_Action_8084BBE4(Player* this, PlayState* play) {
 #endif
         s32 dropWithStick = false;
         if (ledgeStick && stickDir >= 0) {
-            // While hanging, Link's yaw points away from the wall, so "backward" is towards it
-            if (relDir == PLAYER_STICK_DIR_FORWARD) {
+            // actionVar1 > 0: Link walked off the edge and hangs with his yaw pointing away from the wall.
+            // actionVar1 < 0: Link grabbed the edge from below and faces the wall.
+            s8 towardsWall = (this->av1.actionVar1 > 0) ? PLAYER_STICK_DIR_BACKWARD : PLAYER_STICK_DIR_FORWARD;
+            s8 awayFromWall = (this->av1.actionVar1 > 0) ? PLAYER_STICK_DIR_FORWARD : PLAYER_STICK_DIR_BACKWARD;
+            if (relDir == awayFromWall) {
                 dropWithStick = true;
             }
-            if (relDir != PLAYER_STICK_DIR_BACKWARD) {
+            if (relDir != towardsWall) {
                 stickDir = -1;
             }
         }
