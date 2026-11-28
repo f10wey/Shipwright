@@ -58,6 +58,19 @@ extern jboolean JNICALL Java_com_dishii_soh_MainActivity_isOcarinaMode(JNIEnv* e
     return (mode >= MSGMODE_OCARINA_STARTING && mode <= MSGMODE_FROGS_WAITING) ? JNI_TRUE : JNI_FALSE;
 }
 
+// Touch item wheel button (Y): set while the finger is on it; the wheel toggles on press
+volatile int touchWheelHeld = 0;
+extern int ItemWheel_IsOpen(void);
+
+extern void JNICALL Java_com_dishii_soh_MainActivity_setWheelHeld(JNIEnv* env, jobject jobj, jboolean held) {
+    touchWheelHeld = held ? 1 : 0;
+}
+
+// Polled by the overlay: while the wheel is open, taps must go to the game's UI instead of the camera
+extern jboolean JNICALL Java_com_dishii_soh_MainActivity_isWheelOpen(JNIEnv* env, jobject jobj) {
+    return ItemWheel_IsOpen() ? JNI_TRUE : JNI_FALSE;
+}
+
 // Touch jump button (X): set while the finger is on it
 volatile int touchJumpHeld = 0;
 

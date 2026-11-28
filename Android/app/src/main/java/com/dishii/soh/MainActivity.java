@@ -459,6 +459,8 @@ public class MainActivity extends SDLActivity{
     public native void setButton(int button, boolean value);
     public native void setJumpHeld(boolean held);
     public native boolean isOcarinaMode();
+    public native void setWheelHeld(boolean held);
+    public native boolean isWheelOpen();
     public native void setCameraState(int axis, float value);
 
     // Native method for setting joystick axis value
@@ -548,9 +550,9 @@ public class MainActivity extends SDLActivity{
         touchEditor.addControl("stick", "Стик", false, leftJoystick);
         touchEditor.addControl("a", "A", false, buttonA);
         touchEditor.addControl("b", "B", false, buttonB);
-        // X is the jump button; Y has no default use, so it starts hidden
+        // X is the jump button, Y opens the item wheel
         touchEditor.addControl("x", "Прыжок", false, buttonX);
-        touchEditor.addControl("y", "Y", true, buttonY);
+        touchEditor.addControl("y", "Колесо предметов", false, buttonY);
         touchEditor.addControl("c", "C-кнопки", false,
                 overlayView.findViewById(R.id.imageView), buttonDpadUp, buttonDpadDown, buttonDpadLeft, buttonDpadRight);
         touchEditor.addControl("l", "L", false, buttonLB);
@@ -578,7 +580,22 @@ public class MainActivity extends SDLActivity{
                     // Native library not ready yet
                 }
                 touchEditor.setOcarinaBoost(playing);
-                ocarinaPoll.postDelayed(this, 150);
+                // While the item wheel is open, taps go to the wheel instead of turning the camera
+                boolean wheel = false;
+                try {
+                    wheel = isWheelOpen();
+                } catch (Throwable t) {
+                    // Native library not ready yet
+                }
+                if (wheel != wheelWasOpen) {
+                    wheelWasOpen = wheel;
+                    if (wheel) {
+                        DisableTouchArea();
+                    } else {
+                        EnableTouchArea();
+                    }
+                }
+                ocarinaPoll.postDelayed(this, 100);
             }
         }, 1000);
 
@@ -627,16 +644,19 @@ public class MainActivity extends SDLActivity{
                     case MotionEvent.ACTION_DOWN:
                         setButton(buttonNum, true);
                         if (buttonNum == ControllerButtons.BUTTON_X) setJumpHeld(true);
+                        if (buttonNum == ControllerButtons.BUTTON_Y) setWheelHeld(true);
                         button.setPressed(true);
                         return true;
                     case MotionEvent.ACTION_UP:
                         setButton(buttonNum, false);
                         if (buttonNum == ControllerButtons.BUTTON_X) setJumpHeld(false);
+                        if (buttonNum == ControllerButtons.BUTTON_Y) setWheelHeld(false);
                         button.setPressed(false);
                         return true;
                     case MotionEvent.ACTION_CANCEL:
                         setButton(buttonNum, false);
                         if (buttonNum == ControllerButtons.BUTTON_X) setJumpHeld(false);
+                        if (buttonNum == ControllerButtons.BUTTON_Y) setWheelHeld(false);
                         button.setPressed(false);
                         return true;
                 }
@@ -668,6 +688,7 @@ public class MainActivity extends SDLActivity{
     }
 
     boolean TouchAreaEnabled = true;
+    private boolean wheelWasOpen = false;
 
     void DisableTouchArea(){
         TouchAreaEnabled = false;

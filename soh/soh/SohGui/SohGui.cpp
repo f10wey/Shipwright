@@ -33,6 +33,7 @@
 #include "soh/Enhancements/cosmetics/authenticGfxPatches.h"
 #include "soh/Enhancements/debugger/MessageViewer.h"
 #include "soh/Notification/Notification.h"
+#include "soh/Enhancements/ItemWheel.h"
 #include "soh/Enhancements/TimeDisplay/TimeDisplay.h"
 
 namespace SohGui {
@@ -97,6 +98,7 @@ std::shared_ptr<PlandomizerWindow> mPlandomizerWindow;
 std::shared_ptr<RandomizerSettingsWindow> mRandomizerSettingsWindow;
 std::shared_ptr<SohModalWindow> mModalWindow;
 std::shared_ptr<Notification::Window> mNotificationWindow;
+std::shared_ptr<ItemWheelWindow> mItemWheelWindow;
 std::shared_ptr<TimeDisplayWindow> mTimeDisplayWindow;
 
 UIWidgets::Colors GetMenuThemeColor() {
@@ -201,6 +203,9 @@ void SetupGuiElements() {
     mNotificationWindow = std::make_shared<Notification::Window>(CVAR_WINDOW("Notifications"), "Notifications Window");
     gui->AddGuiWindow(mNotificationWindow);
     mNotificationWindow->Show();
+    mItemWheelWindow = std::make_shared<ItemWheelWindow>(CVAR_WINDOW("ItemWheel"), "Item Wheel");
+    gui->AddGuiWindow(mItemWheelWindow);
+    mItemWheelWindow->Show();
     mTimeDisplayWindow = std::make_shared<TimeDisplayWindow>(CVAR_WINDOW("TimeDisplayEnabled"), "Additional Timers");
     gui->AddGuiWindow(mTimeDisplayWindow);
 }
@@ -210,6 +215,7 @@ void Destroy() {
     gui->RemoveAllGuiWindows();
 
     mNotificationWindow = nullptr;
+    mItemWheelWindow = nullptr;
     mModalWindow = nullptr;
     mRandomizerSettingsWindow = nullptr;
     mItemTrackerWindow = nullptr;

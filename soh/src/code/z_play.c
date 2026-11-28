@@ -689,6 +689,8 @@ void Play_Init(GameState* thisx) {
     }
 }
 
+int ItemWheel_Update(PlayState* play);
+
 void Play_Update(PlayState* play) {
     Input* input = play->state.input;
     s32 isPaused;
@@ -1716,7 +1718,8 @@ void Play_Main(GameState* thisx) {
         HREG(94) = 10;
     }
 
-    if ((HREG(80) != 10) || (HREG(81) != 0)) {
+    // The item wheel pauses the game while it is open
+    if (((HREG(80) != 10) || (HREG(81) != 0)) && !ItemWheel_Update(play)) {
         Play_Update(play);
     }
 

@@ -120,7 +120,7 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:background="@drawable/ic_button"
-        android:text="Y"
+        android:text="◎"
         app:layout_constraintBottom_toTopOf="@id/buttonB"
         app:layout_constraintEnd_toStartOf="@id/buttonB"
         android:textColor="#FFFFFFFF"/>

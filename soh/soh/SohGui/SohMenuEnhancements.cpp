@@ -459,6 +459,12 @@ void SohMenu::AddMenuEnhancements() {
 #endif
             "While hanging from a ledge: push towards the wall to climb up, away from it to let go. "
             "Sideways does nothing."));
+    AddWidget(path, "Item Wheel", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("ItemWheel"))
+        .RaceDisable(false)
+        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+            "The on-screen Y button opens a wheel with your items and equipment and pauses the game. Tap an item, "
+            "then press a C button to put it there; tap equipment to put it on. Tap outside the wheel or press B to close."));
     AddWidget(path, "Jump Button", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("JumpButton"))
         .RaceDisable(false)
@@ -488,6 +494,14 @@ void SohMenu::AddMenuEnhancements() {
         .Options(CheckboxOptions().DefaultValue(false).Tooltip(
 #endif
             "When you swing the sword while standing still, Link turns to where the camera is looking first."));
+#ifdef __ANDROID__
+    AddWidget(path, "Skip Off-Screen Geometry", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("CullOffscreenVertices"))
+        .RaceDisable(false)
+        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+            "Does not process groups of vertices that are completely outside the screen. Works in every area and "
+            "on every object; the picture stays the same. Turn off if something looks wrong at the screen edges."));
+#endif
     AddWidget(path, "Skip Off-Screen Scenery", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_ENHANCEMENT("CullOffscreenRoomParts"))
         .RaceDisable(false)
